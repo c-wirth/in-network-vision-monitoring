@@ -7,11 +7,33 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 
-# IDE
-.idea/
+# Build outputs
+build/
+**/build/
+*.o
+*.elf
+*.bin
+*.map
+*.log
 
-# OS
-.DS_Store
+# ESP-IDF generated
+sdkconfig
+*/sdkconfig
+*/sdkconfig.defaults.local
+esp32/dependencies.lock
+*/managed_components/
 
-#
+# Toolchain
+/.espressif/
+*/.cache/
+/.pio/
+
+# Secrets
+.env
 server/auth.db
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
