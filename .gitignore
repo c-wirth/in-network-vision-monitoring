@@ -26,6 +26,8 @@ esp32/dependencies.lock
 # Toolchain
 /.espressif/
 */.cache/
+
+
 /.pio/
 
 # Secrets
