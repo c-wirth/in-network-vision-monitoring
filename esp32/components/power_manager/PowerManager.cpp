@@ -31,7 +31,7 @@ esp_err_t PowerManager::init() {
 		return ESP_OK;
 	}
 
-	esp_pm_config_esp32_t pm_config = {
+	esp_pm_config_t pm_config = {
 		.max_freq_mhz = 240, // max CPU freq
 		.min_freq_mhz = 80,  // min CPU freq
 		.light_sleep_enable = true
@@ -97,6 +97,11 @@ esp_err_t PowerManager::setLowPower()
     esp_err_t ret;
 
     ret = esp_pm_lock_release(cpu_lock_);
+
+    if (ret == ESP_ERR_INVALID_STATE){
+	ESP_LOGI(TAG, "No lock held on CPU.");
+	return ESP_OK;
+	}
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to release CPU lock: %s", esp_err_to_name(ret));
         return ret;

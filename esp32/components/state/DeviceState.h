@@ -18,7 +18,7 @@ public:
     NetworkState getNetworkState() const;
 
     // power state events
-    void SetPowerMode(PowerState state);
+    void setPowerMode(PowerState state);
  
 
     // TODO CHANGE THESE TO ONE PARAMETERIZED FUNCTION

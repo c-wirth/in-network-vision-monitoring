@@ -34,8 +34,8 @@ private:
     static TaskHandle_t io2TaskHandle;
 
     // Current blink intervals
-    static uint32_t io2_on_ms;
-    static uint32_t io2_off_ms;
+    static volatile uint32_t io2_on_ms;
+    static volatile uint32_t io2_off_ms;
 
     // GPIO pin for IO2
     static const gpio_num_t IO2_GPIO = GPIO_NUM_2;

@@ -1,6 +1,7 @@
 #include "DeviceState.h"
 #include "PowerManager.h"
 // #include "CameraDriver.h"
+// #include "NetworkManager.h"
 #include "LEDDriver.h"
 #include "esp_log.h"
 
@@ -26,22 +27,28 @@ NetworkState DeviceStateManager::getNetworkState() const { return networkState_;
 
 void DeviceStateManager::setPowerMode(PowerState state) {
 
-    esp_err_t ret;
+    esp_err_t ret = ESP_FAIL;
 
     switch (state) {
         case PowerState::IDLE:
-            ret = setLowPower();
-            LEDDriver::setIO2(1000, 2500);
+	    ret = PowerManager::setLowPower();
+	    LEDDriver::stopIO2();
             break;
 
         case PowerState::HIGH_POWER:
-            ret = setHighPower();
+            ret = PowerManager::setHighPower();
             LEDDriver::setIO2(1000, 1000);
             break;
 
         case PowerState::ERROR:
             ESP_LOGE(TAG, "Device in ERROR state!");
             LEDDriver::setIO2(250, 250);
+            return;
+
+	default:
+            ESP_LOGE(TAG, "Unknown PowerState value! %s");
+            LEDDriver::setIO2(250, 250);
+            powerState_ = PowerState::ERROR;
             return;
     }
 
@@ -54,5 +61,4 @@ void DeviceStateManager::setPowerMode(PowerState state) {
     } else {
         powerState_ = state;
     }
-}
 }

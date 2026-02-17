@@ -8,8 +8,8 @@ static const char *TAG = "LEDDriver";
 
 // Initialize static members
 TaskHandle_t LEDDriver::io2TaskHandle = nullptr;
-uint32_t LEDDriver::io2_on_ms = 500;   // default 500ms on
-uint32_t LEDDriver::io2_off_ms = 500;  // default 500ms off
+volatile uint32_t LEDDriver::io2_on_ms = 500;   // default 500ms on
+volatile uint32_t LEDDriver::io2_off_ms = 500;  // default 500ms off
 
 void LEDDriver::init() {
     // Configure IO2 GPIO
