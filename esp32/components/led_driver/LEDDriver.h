@@ -1,8 +1,7 @@
+#pragma once
+
 // LEDDriver.h
 // Manages onboard LEDs with configurable blink patterns
-#ifndef LED_MANAGER_H
-#define LED_MANAGER_H
-
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -43,5 +42,3 @@ private:
     // Internal task that toggles IO2
     static void IO2BlinkTask(void* arg);
 };
-
-#endif // LED_MANAGER_H

@@ -1,5 +1,4 @@
-#ifndef POWER_MANAGER_H
-#define POWER_MANAGER_H
+#pragma once
 
 #include "esp_err.h"
 #include "esp_pm.h"
@@ -21,4 +20,3 @@ private:
     static esp_pm_lock_handle_t cpu_lock_;
     static bool initialized_;
 };
-#endif

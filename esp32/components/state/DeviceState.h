@@ -1,8 +1,7 @@
+#pragma once
+
 // DeviceState.h
 // Manages the device's functional states (idle, high power, error)
-
-#ifndef DEVICE_STATE_H
-#define DEVICE_STATE_H
 
 enum class PowerState { IDLE, HIGH_POWER, ERROR };
 enum class CameraState { IDLE, OFF, SINGLE_CAPTURE, CAPTURE_STREAM, ERROR };
@@ -37,5 +36,3 @@ private:
     CameraState cameraState_;
     NetworkState networkState_;
 };
-
-#endif // DEVICE_STATE_H
