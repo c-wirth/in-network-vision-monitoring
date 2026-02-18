@@ -58,12 +58,13 @@ void DeviceStateManager::setPowerState(PowerState state) {
             break;
 
         case PowerState::ERROR:
-            ESP_LOGE(TAG, "Device in ERROR state!");
+            ESP_LOGE(TAG, "Device set to ERROR state!");
             LEDDriver::setIO2(250, 250);
+            powerState_ = PowerState::ERROR;
             return;
 
 	default:
-            ESP_LOGE(TAG, "Unknown PowerState value! %s");
+            ESP_LOGE(TAG, "Unknown PowerState set: %s.  Switching to PowerState::ERROR", DeviceStateManager::powerStateToString(state));
             LEDDriver::setIO2(250, 250);
             powerState_ = PowerState::ERROR;
             return;
