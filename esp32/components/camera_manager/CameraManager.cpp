@@ -88,13 +88,15 @@ esp_err_t CameraManager::init() {
 esp_err_t CameraManager::deinit() {
     if (!initialized_) return ESP_OK;
 
-    if (streaming_){
-		ESP_LOGW(TAG, "CameraManager::deinit() called while steaming, calling CameraManager::stopStream() first.");
-		CameraManager::stopStream();
-		while (stream_task_handle_ != nullptr) {
-			vTaskDelay(pdMS_TO_TICKS(1));
-		}
+    if (streaming_) {
+        ESP_LOGW(TAG, "CameraManager::deinit() called while streaming, stopping stream first");
+        esp_err_t ret = CameraManager::stopStream();
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "CameraManager::deinit() failed to stop stream: %s", esp_err_to_name(ret));
+            return ret;
+        }
     }
+
     esp_err_t ret = esp_camera_deinit();
     if (ret == ESP_OK) initialized_ = false;
     return ret;
@@ -163,15 +165,30 @@ esp_err_t CameraManager::startStream(uint32_t fps) {
 return ESP_OK;
 }
 
-void CameraManager::stopStream() {
 
-    if (!streaming_){
-	ESP_LOGW(TAG, "CameraManager::stopStream was called but the CameraManager::stream task was not running");
-        return;
-	} 
+esp_err_t CameraManager::stopStream() {
+    if (!streaming_) {
+        ESP_LOGW(TAG, "CameraManager::stopStream called but stream was not running");
+        return ESP_OK;
+    }
 
-    streaming_ = false; // this will stop the streaming task altogether; streaming_ = true is the condition for streaming
+    streaming_ = false;
 
+    const TickType_t timeout = pdMS_TO_TICKS(2000); // 2 second timeout
+    const TickType_t poll_interval = pdMS_TO_TICKS(1);
+    TickType_t elapsed = 0;
+
+    while (stream_task_handle_ != nullptr) {
+        if (elapsed >= timeout) {
+            ESP_LOGE(TAG, "CameraManager::stopStream timed out waiting for stream task to exit");
+            return ESP_ERR_TIMEOUT;
+        }
+        vTaskDelay(poll_interval);
+        elapsed += poll_interval;
+    }
+
+    ESP_LOGI(TAG, "Camera stream stopped successfully");
+    return ESP_OK;
 }
 
 
@@ -181,7 +198,7 @@ bool CameraManager::isStreaming() {
 
 
 bool CameraManager::isInitialized() {
-    return initialized__;
+    return initialized_;
 }
 
 
@@ -202,9 +219,8 @@ void CameraManager::streamTask(void* param) {
                  fb->timestamp.tv_sec,
                  fb->timestamp.tv_usec);
 
-        returnFrame(fb);
 
-	    CameraManager::returnFrame(fb);
+	CameraManager::returnFrame(fb);
         } else {
             ESP_LOGE(TAG, "Failed to capture frame during streaming");
         }

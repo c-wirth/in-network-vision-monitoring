@@ -146,7 +146,7 @@ void DeviceStateManager::setCameraState(CameraState state) {
 	            break;
 	        }
 	    }
-    	    ret = CameraManager::startStream();
+    	    ret = CameraManager::startStream(camera_fps);
 	    break;
 
         case CameraState::ERROR:

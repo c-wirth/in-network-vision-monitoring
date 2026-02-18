@@ -16,6 +16,9 @@ public:
     DeviceStateManager();
 
 
+    uint32_t camera_fps = 30;
+
+
     // PowerState events
     PowerState getPowerState() const;
     void setPowerState(PowerState state);
