@@ -6,7 +6,11 @@
 #include "PowerManager.h"
  #include "NetworkManager.h"
 #include "LEDDriver.h"
+
 #include "esp_log.h"
+#include <cstdint>
+#include "esp_event.h"
+#include "nvs_flash.h"
 
 
 static const char *TAG = "DeviceState";
@@ -23,22 +27,15 @@ DeviceStateManager::DeviceStateManager():
 
         // Register network event callback
         NetworkManager::setEventCallback(
-            [this](esp_event_base_t event_base, int32_t event_id, void* event_data) {
-                if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-                    this->setNetworkState(NetworkState::DISCONNECTED);
-                }
-                else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-                    this->setNetworkState(NetworkState::CONNECTED);
-                }
-            }
+		[this](esp_event_base_t base, int32_t id, void* data) {
+			this->onNetworkEvent(base, id, data);
+        }
         );
 }
 
 
 PowerState DeviceStateManager::getPowerState() const { return powerState_; }
-
 CameraState DeviceStateManager::getCameraState() const { return cameraState_; }
-
 NetworkState DeviceStateManager::getNetworkState() const { return networkState_; }
 
 
@@ -58,7 +55,7 @@ void DeviceStateManager::setPowerState(PowerState state) {
             break;
 
         case PowerState::ERROR:
-            ESP_LOGE(TAG, "Device set to ERROR state!");
+            ESP_LOGE(TAG, "PowerState set to ERROR state!");
             LEDDriver::setIO2(250, 250);
             powerState_ = PowerState::ERROR;
             return;
@@ -82,19 +79,37 @@ void DeviceStateManager::setPowerState(PowerState state) {
 }
 
 
-void DeviceStateManager::setNetworkState(NetworkState new_state) {
-    networkState_ = new_state;
+void DeviceStateManager::setNetworkState(NetworkState state) {
+    esp_err_t ret = ESP_OK;
 
-    switch(new_state) {
+    switch(state) {
         case NetworkState::CONNECTED:
-            ESP_LOGI(TAG, "Network state set: CONNECTED");
+            ret = NetworkManager::connect();
             break;
         case NetworkState::DISCONNECTED:
-            ESP_LOGI(TAG, "Network state set: DISCONNECTED");
+            ret = NetworkManager::disconnect();
             break;
         case NetworkState::ERROR:
-            ESP_LOGE(TAG, "Network state set: ERROR");
-            break;
+            networkState_ = NetworkState::ERROR;
+            return;
+    }
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to change network state: %s", esp_err_to_name(ret));
+        networkState_ = NetworkState::ERROR;
+    } else {
+        networkState_ = state;
+    }
+}
+
+
+void DeviceStateManager::onNetworkEvent(esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        networkState_ = NetworkState::DISCONNECTED;
+        ESP_LOGW(TAG, "Network disconnected unexpectedly");
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        networkState_ = NetworkState::CONNECTED;
+        ESP_LOGI(TAG, "Network connected (got IP)");
     }
 }
 

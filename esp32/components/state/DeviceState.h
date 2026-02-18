@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include "esp_event.h"
+#include "nvs_flash.h"
+
 // DeviceState.h
 // Manages the device's functional states (idle, high power, error)
 
@@ -20,9 +24,11 @@ public:
 
     // power state events
     void setPowerState(PowerState state);
+
  
     // Network state events
-    void setNetworkState(NetworkState new_state);
+    void setNetworkState(NetworkState state);
+    void onNetworkEvent(esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 
     // TODO CHANGE THESE TO ONE PARAMETERIZED FUNCTION

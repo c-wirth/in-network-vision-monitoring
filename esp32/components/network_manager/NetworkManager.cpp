@@ -6,8 +6,7 @@
 #include "esp_wifi_types_generic.h"
 #include "sdkconfig.h"
 #include <functional>
-
-
+#include "nvs_flash.h"
 #include "string.h"
 
 static const char* TAG = "NetworkManager";
@@ -34,7 +33,7 @@ esp_err_t NetworkManager::connect(){
 	}
 
 	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK){
-		ESP_LOGE(TAG, "Network was already connected when NetworkManager::connect() was called.");
+		ESP_LOGW(TAG, "Network was already connected when NetworkManager::connect() was called.");
 		return ESP_OK;
 	}
 
@@ -75,7 +74,7 @@ esp_err_t NetworkManager::disconnect(){
 	wifi_ap_record_t ap_info;
 
 	if (esp_wifi_sta_get_ap_info(&ap_info) != ESP_OK){
-		ESP_LOGE(TAG, "Network was already disconnected when NetworkManager::disconnect() was called.");
+		ESP_LOGW(TAG, "Network was already disconnected when NetworkManager::disconnect() was called.");
 		return ESP_OK;
 	}
 
@@ -117,8 +116,24 @@ esp_err_t NetworkManager::init(){
 		return ESP_OK;
 	}
 
+
+        // NVIS
+        esp_err_t ret = nvs_flash_init();
+        if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            ret = nvs_flash_init();
+        }
+        ESP_ERROR_CHECK(ret);
+
+        // TCP/IP stack
+        ESP_ERROR_CHECK(esp_netif_init());
+
+
+        // Create default Wi-Fi STA interface
+        esp_netif_create_default_wifi_sta();
+
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	esp_err_t ret = esp_wifi_init(&cfg);
+	ret = esp_wifi_init(&cfg);
 
         if (ret == ESP_ERR_NO_MEM) {
             ESP_LOGE(TAG, "esp_wifi_init failed due to OOM: %s", esp_err_to_name(ret));
