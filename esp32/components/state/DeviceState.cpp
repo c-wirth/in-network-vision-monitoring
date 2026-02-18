@@ -2,9 +2,9 @@
 
 
 #include "DeviceState.h"
-// #include "CameraDriver.h"
+#include "CameraManager.h"
 #include "PowerManager.h"
- #include "NetworkManager.h"
+#include "NetworkManager.h"
 #include "LEDDriver.h"
 
 #include "esp_log.h"
@@ -91,11 +91,12 @@ void DeviceStateManager::setNetworkState(NetworkState state) {
             break;
         case NetworkState::ERROR:
             networkState_ = NetworkState::ERROR;
+            ESP_LOGE(TAG, "NetworkState is set to ERROR!");
             return;
     }
 
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to change network state: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "Failed to change NetworkState to: %s, setting to NetworkState::Error", esp_err_to_name(ret));
         networkState_ = NetworkState::ERROR;
     } else {
         networkState_ = state;
@@ -110,6 +111,56 @@ void DeviceStateManager::onNetworkEvent(esp_event_base_t event_base, int32_t eve
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         networkState_ = NetworkState::CONNECTED;
         ESP_LOGI(TAG, "Network connected (got IP)");
+    }
+}
+
+
+void DeviceStateManager::setCameraState(CameraState state) {
+    esp_err_t ret = ESP_OK;
+
+    // Extreme Error check: cannot be streaming if uninitialized
+    if (!CameraManager::isInitialized() && CameraManager::isStreaming()) {
+        ESP_LOGE(TAG, "Invalid camera state: streaming but not initialized, setting to CameraState::ERROR");
+        cameraState_ = CameraState::ERROR;
+        return;
+    }
+
+    switch (state) {
+        case CameraState::OFF:
+            ret = CameraManager::deinit();
+            break;
+
+        case CameraState::IDLE:
+            if (CameraManager::isStreaming()) {
+                ret = CameraManager::stopStream();
+            } else if (!CameraManager::isInitialized()) {
+                ret = CameraManager::init();
+            }
+            break;
+
+	case CameraState::CAPTURE_STREAM:
+	    if (!CameraManager::isInitialized()) {
+	        ret = CameraManager::init();
+	        if (ret != ESP_OK) {
+	            ESP_LOGE(TAG, "Failed to initialize camera before streaming: %s", esp_err_to_name(ret));
+	            break;
+	        }
+	    }
+    	    ret = CameraManager::startStream();
+	    break;
+
+        case CameraState::ERROR:
+            ESP_LOGE(TAG, "CameraState is set to ERROR!");
+            cameraState_ = CameraState::ERROR;
+            return;
+    }
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to change CameraState to: %s, received: %s, setting to CameraState::ERROR",
+            cameraStateToString(state), esp_err_to_name(ret));
+        cameraState_ = CameraState::ERROR;
+    } else {
+        cameraState_ = state;
     }
 }
 
@@ -130,5 +181,16 @@ const char* DeviceStateManager::powerStateToString(PowerState state) {
         case PowerState::HIGH_POWER:  return "HIGH_POWER";
         case PowerState::ERROR:       return "ERROR";
         default:                      return "UNKNOWN";
+    }
+}
+
+
+const char* DeviceStateManager::cameraStateToString(CameraState state) {
+    switch (state) {
+        case CameraState::IDLE:            return "IDLE";
+        case CameraState::OFF:             return "OFF";
+        case CameraState::CAPTURE_STREAM:  return "CAPTURE_STREAM";
+        case CameraState::ERROR:           return "ERROR";
+        default:                           return "UNKNOWN";
     }
 }

@@ -9,41 +9,37 @@
 
 enum class PowerState { IDLE, HIGH_POWER, ERROR };
 enum class NetworkState { DISCONNECTED, CONNECTED, ERROR };
-enum class CameraState { IDLE, OFF, SINGLE_CAPTURE, CAPTURE_STREAM, ERROR };
+enum class CameraState { IDLE, OFF, CAPTURE_STREAM, ERROR };
 
 class DeviceStateManager {
 public:
     DeviceStateManager();
 
 
-
-    // Query states
+    // PowerState events
     PowerState getPowerState() const;
-    CameraState getCameraState() const;
-    NetworkState getNetworkState() const;
-
-    // power state events
     void setPowerState(PowerState state);
 
  
-    // Network state events
+    // NetworkState events
+    NetworkState getNetworkState() const;
     void setNetworkState(NetworkState state);
     void onNetworkEvent(esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 
-    // TODO CHANGE THESE TO ONE PARAMETERIZED FUNCTION
-    // camera state events
-    void requestCameraOn();
-    void requestCameraOff();
-    void requestSingleCapture();
-    void requestCaptureStream();
 
-
-    static const char* networkStateToString(NetworkState state);
-    static const char* powerStateToString(PowerState state);
+    // CameraState events
+    CameraState getCameraState() const;
+    void setCameraState(CameraState state);
 
 private:
     PowerState powerState_;
     CameraState cameraState_;
     NetworkState networkState_;
+
+
+
+    static const char* powerStateToString(PowerState state);
+    static const char* networkStateToString(NetworkState state);
+    static const char* cameraStateToString(CameraState state);
 };

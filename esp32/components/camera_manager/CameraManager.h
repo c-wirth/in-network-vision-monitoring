@@ -18,15 +18,18 @@ public:
     static esp_err_t startStream(uint32_t fps = 30); // default 30 fps
     static void stopStream();
     static bool isStreaming();
+    static bool isInitialized();
 
 private:
     static bool initialized_;
     static bool streaming_;
-    static volatile TaskHandle_t stream_task_handle_; // pointer to the video stream capture task
-    static volatile TickType_t stream_interval_;
+    static TaskHandle_t stream_task_handle_; // pointer to the video stream capture task
+    static TickType_t stream_interval_;
 
     static void streamTask(void* param);
 
-    static inline TickType_t fpsToTicks(uint32_t fps) return pdMS_TO_TICKS(1000 / fps);
+    static inline TickType_t fpsToTicks(uint32_t fps) {
+        return pdMS_TO_TICKS(1000 / fps);
+    }
 
 };

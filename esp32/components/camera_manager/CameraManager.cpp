@@ -31,7 +31,7 @@ static const char* TAG = "CameraManager";
 bool CameraManager::initialized_ = false;
 bool CameraManager::streaming_ = false;
 TaskHandle_t CameraManager::stream_task_handle_ = nullptr;
-TickType_t stream_interval_ = 0;
+TickType_t CameraManager::stream_interval_ = 0;
 
 esp_err_t CameraManager::init() {
     if (initialized_) {
@@ -152,13 +152,13 @@ esp_err_t CameraManager::startStream(uint32_t fps) {
 		8192, // stack size
 		nullptr,
 		10, // task priority
-		&stream_task_handle_ //
+		&stream_task_handle_
 	);
 	if (ret != pdPASS) {
-	ESP_LOGE(TAG, "Failed to start camera streaming task");
-	streaming_ = false;
-	return ESP_FAIL;
-}
+		ESP_LOGE(TAG, "Failed to start camera streaming task");
+		streaming_ = false;
+		return ESP_FAIL;
+	}
 
 return ESP_OK;
 }
@@ -177,6 +177,11 @@ void CameraManager::stopStream() {
 
 bool CameraManager::isStreaming() {
     return streaming_;
+}
+
+
+bool CameraManager::isInitialized() {
+    return initialized__;
 }
 
 
