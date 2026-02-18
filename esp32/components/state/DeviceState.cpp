@@ -96,3 +96,23 @@ void DeviceStateManager::setNetworkState(NetworkState new_state) {
             break;
     }
 }
+
+
+const char* DeviceStateManager::networkStateToString(NetworkState state) {
+    switch (state) {
+        case NetworkState::DISCONNECTED: return "DISCONNECTED";
+        case NetworkState::CONNECTED:    return "CONNECTED";
+        case NetworkState::ERROR:        return "ERROR";
+        default:                         return "UNKNOWN";
+    }
+}
+
+
+const char* DeviceStateManager::powerStateToString(PowerState state) {
+    switch (state) {
+        case PowerState::IDLE:        return "IDLE";
+        case PowerState::HIGH_POWER:  return "HIGH_POWER";
+        case PowerState::ERROR:       return "ERROR";
+        default:                      return "UNKNOWN";
+    }
+}

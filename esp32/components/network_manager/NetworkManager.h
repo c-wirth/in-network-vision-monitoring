@@ -27,6 +27,16 @@ public:
     static void setEventCallback(EventCallback cb);
 
 
+    /**
+    * @brief method for connect initializes wifi manager by enabling the esp wifi driver
+    *
+    * This does not faciliate the connection to any network, it simple allocates space for WiFi in memory
+    *
+     * @return ESP_OK on success, or if already initialized (idempotent)
+     * @return ESP_ERR_INVALID_ARG or ESP_ERR_NOT_SUPPORTED if esp_pm calls fail
+    */
+    static esp_err_t init();
+
     // Start connection to configured WiFi -automatically boots up wifi driver
     static esp_err_t connect();
 
@@ -42,18 +52,6 @@ public:
 
 
 private:
-
-
-    /**
-    * @brief helper method for connect initializes wifi manager by enabling the esp wifi driver
-    *
-    * This does not faciliate the connection to any network, it simple allocates space for WiFi in memory
-    *
-     * @return ESP_OK on success, or if already initialized (idempotent)
-     * @return ESP_ERR_INVALID_ARG or ESP_ERR_NOT_SUPPORTED if esp_pm calls fail
-    */
-    static esp_err_t init_();
-
 
     /**
      * @brief Build a WiFi configuration struct for STA connection.
@@ -108,10 +106,9 @@ private:
      * @note This handler currently only processes Wi-Fi STA events and ignores
      *       other event bases.
      */
-    static void handleEvent_(esp_event_base_t base, int32_t event_id, void* event_data);
+    static void handle_event_(esp_event_base_t base, int32_t event_id, void* event_data);
 
-
-    static EventCallback event_call_back_;
+    static EventCallback event_callback_;
 
     static bool initialized_;
     static esp_ip4_addr_t ipAddr_;

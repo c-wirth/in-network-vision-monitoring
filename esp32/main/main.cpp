@@ -21,7 +21,7 @@ extern "C" void app_main(void) {
     }
 
 
-    esp_err_t ret = NetworkManager::init();
+    ret = NetworkManager::init();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "NetworkManager init failed: %s", esp_err_to_name(ret));
         return;
@@ -32,35 +32,38 @@ extern "C" void app_main(void) {
     // --- Initialize DeviceStateManager ---
     DeviceStateManager deviceState;
 
-
-    ESP_LOGI("Network state 1, %s: (expected DISCONNECTED)", deviceState.getNetworkState())
-    ESP_LOGI("Power state 1, %s: (expected IDLE)", deviceState.getPowerState())
-
-
+    ESP_LOGI(TAG, "Network state 1: %s (expected DISCONNECTED)",
+             DeviceStateManager::networkStateToString(deviceState.getNetworkState()));
+    ESP_LOGI(TAG, "Power state 1: %s (expected IDLE)",
+             DeviceStateManager::powerStateToString(deviceState.getPowerState()));
+ 
     deviceState.setNetworkState(NetworkState::CONNECTED);
-    deviceState.setPowerMode(PowerState::HIGH_POWER);
-    ESP_LOGI("Power state 2, %s: (expected HIGH_POWER)", deviceState.getPowerState())
-    ESP_LOGI("Network state 2, %s: (expected CONNECTED)", deviceState.getNetworkState())
-
-
-    deviceState.setNetworkState(NetworkState::DISCONNECTED);
-    deviceState.setPowerMode(PowerState::IDLE);
-    ESP_LOGI("Network state 3, %s: (expected DISCONNECTED)", deviceState.getNetworkState())
-    ESP_LOGI("Power state 3, %s: (expected IDLE)", deviceState.getPowerState())
-
-
-
-    deviceState.setPowerMode(NetworkState::ERROR);
-    deviceState.setPowerMode(PowerState::ERROR);
-    ESP_LOGI("Power state 3, %s: (expected ERROR)", deviceState.getPowerState())
-    ESP_LOGI("Network state 3, %s: (expected ERROR)", deviceState.getNetworkState())
-
-
+    deviceState.setPowerState(PowerState::HIGH_POWER);
+    ESP_LOGI(TAG, "Power state 2: %s (expected HIGH_POWER)",
+             DeviceStateManager::powerStateToString(deviceState.getPowerState()));
+    ESP_LOGI(TAG, "Network state 2: %s (expected CONNECTED)",
+             DeviceStateManager::networkStateToString(deviceState.getNetworkState()));
 
     deviceState.setNetworkState(NetworkState::DISCONNECTED);
-    deviceState.setPowerMode(PowerState::IDLE);
-    ESP_LOGI("Network state 4, %s: (expected DISCONNECTED)", deviceState.getNetworkState())
-    ESP_LOGI("Power state 4, %s: (expected IDLE)", deviceState.getPowerState())
+    deviceState.setPowerState(PowerState::IDLE);
+    ESP_LOGI(TAG, "Network state 3: %s (expected DISCONNECTED)",
+             DeviceStateManager::networkStateToString(deviceState.getNetworkState()));
+    ESP_LOGI(TAG, "Power state 3: %s (expected IDLE)",
+             DeviceStateManager::powerStateToString(deviceState.getPowerState()));
+
+    deviceState.setNetworkState(NetworkState::ERROR);
+    deviceState.setPowerState(PowerState::ERROR);
+    ESP_LOGI(TAG, "Power state 4: %s (expected ERROR)",
+             DeviceStateManager::powerStateToString(deviceState.getPowerState()));
+    ESP_LOGI(TAG, "Network state 4: %s (expected ERROR)",
+             DeviceStateManager::networkStateToString(deviceState.getNetworkState()));
+
+    deviceState.setNetworkState(NetworkState::DISCONNECTED);
+    deviceState.setPowerState(PowerState::IDLE);
+    ESP_LOGI(TAG, "Network state 5: %s (expected DISCONNECTED)",
+             DeviceStateManager::networkStateToString(deviceState.getNetworkState()));
+    ESP_LOGI(TAG, "Power state 5: %s (expected IDLE)",
+             DeviceStateManager::powerStateToString(deviceState.getPowerState()));
 
 
 

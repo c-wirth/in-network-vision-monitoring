@@ -11,6 +11,8 @@ class DeviceStateManager {
 public:
     DeviceStateManager();
 
+
+
     // Query states
     PowerState getPowerState() const;
     CameraState getCameraState() const;
@@ -30,6 +32,9 @@ public:
     void requestSingleCapture();
     void requestCaptureStream();
 
+
+    static const char* networkStateToString(NetworkState state);
+    static const char* powerStateToString(PowerState state);
 
 private:
     PowerState powerState_;

@@ -3,6 +3,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
 #include "sdkconfig.h"
 #include <functional>
 
@@ -29,7 +30,7 @@ esp_err_t NetworkManager::connect(){
 	esp_err_t ret;
 
 	if (!initialized_){
-		ret = NetworkManager::init_();
+		ret = NetworkManager::init();
 	}
 
 	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK){
@@ -37,7 +38,7 @@ esp_err_t NetworkManager::connect(){
 		return ESP_OK;
 	}
 
-        wifi_config_t wifi_cfg = get_wifi_config_();
+        wifi_config_t wifi_cfg = NetworkManager::get_wifi_config_();
 
 
 	ret = esp_wifi_set_mode(WIFI_MODE_STA);
@@ -71,6 +72,8 @@ esp_err_t NetworkManager::connect(){
 
 esp_err_t NetworkManager::disconnect(){
 
+	wifi_ap_record_t ap_info;
+
 	if (esp_wifi_sta_get_ap_info(&ap_info) != ESP_OK){
 		ESP_LOGE(TAG, "Network was already disconnected when NetworkManager::disconnect() was called.");
 		return ESP_OK;
@@ -83,15 +86,13 @@ esp_err_t NetworkManager::disconnect(){
 		ESP_LOGE(TAG, "esp_wifi_disconnect failed: %s", esp_err_to_name(ret));
 	}
 
-	}
-
 	return ESP_OK;
 }
 
 
 esp_err_t NetworkManager::shutdown(){
 
-        if (!initialized_)
+        if (!initialized_){
             ESP_LOGW(TAG, "NetworkManager was not initialized.");
             return ESP_OK;
         }
@@ -104,19 +105,20 @@ esp_err_t NetworkManager::shutdown(){
 	}
 
         initialized_ = false;
-       ESP_LOGI(TAG, "NetworkManager deinitialized successfully");
-       return ESP_OK;
+        ESP_LOGI(TAG, "NetworkManager deinitialized successfully");
+        return ESP_OK;
 }
 
 
-esp_err_t NetworkManager::init_(){
+esp_err_t NetworkManager::init(){
 
 	if (initialized_){
 		ESP_LOGW(TAG, "NetworkManager was already initialized.");
 		return ESP_OK;
 	}
 
-	esp_err_t ret = esp_wifi_init(WIFI_INIT_CONFIG_DEFAULT);
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	esp_err_t ret = esp_wifi_init(&cfg);
 
         if (ret == ESP_ERR_NO_MEM) {
             ESP_LOGE(TAG, "esp_wifi_init failed due to OOM: %s", esp_err_to_name(ret));
@@ -134,7 +136,7 @@ esp_err_t NetworkManager::init_(){
 }
 
 
-static wifi_config_t get_wifi_config_(){
+wifi_config_t NetworkManager::get_wifi_config_(){
     wifi_config_t cfg = {};
     strncpy((char*)cfg.sta.ssid, CONFIG_WIFI_SSID, sizeof(cfg.sta.ssid) - 1);
     strncpy((char*)cfg.sta.password, CONFIG_WIFI_PASSWORD, sizeof(cfg.sta.password) - 1);
