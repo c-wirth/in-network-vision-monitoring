@@ -4,8 +4,8 @@
 // Manages the device's functional states (idle, high power, error)
 
 enum class PowerState { IDLE, HIGH_POWER, ERROR };
-enum class CameraState { IDLE, OFF, SINGLE_CAPTURE, CAPTURE_STREAM, ERROR };
 enum class NetworkState { DISCONNECTED, CONNECTED, ERROR };
+enum class CameraState { IDLE, OFF, SINGLE_CAPTURE, CAPTURE_STREAM, ERROR };
 
 class DeviceStateManager {
 public:
@@ -17,7 +17,7 @@ public:
     NetworkState getNetworkState() const;
 
     // power state events
-    void setPowerMode(PowerState state);
+    void setPowerState(PowerState state);
  
     // Network state events
     void setNetworkState(NetworkState new_state);

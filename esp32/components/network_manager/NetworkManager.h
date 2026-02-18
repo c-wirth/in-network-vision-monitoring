@@ -7,6 +7,7 @@
 #include "esp_wifi.h"
 #include "sdkconfig.h"
 #include "esp_err.h"
+#include <functional>
 
 #include "esp_event.h"
 

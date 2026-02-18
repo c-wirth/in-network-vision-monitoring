@@ -25,10 +25,10 @@ DeviceStateManager::DeviceStateManager():
         NetworkManager::setEventCallback(
             [this](esp_event_base_t event_base, int32_t event_id, void* event_data) {
                 if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-                    this->updateNetworkState(NetworkState::DISCONNECTED);
+                    this->setNetworkState(NetworkState::DISCONNECTED);
                 }
                 else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-                    this->updateNetworkState(NetworkState::CONNECTED);
+                    this->setNetworkState(NetworkState::CONNECTED);
                 }
             }
         );
@@ -42,7 +42,7 @@ CameraState DeviceStateManager::getCameraState() const { return cameraState_; }
 NetworkState DeviceStateManager::getNetworkState() const { return networkState_; }
 
 
-void DeviceStateManager::setPowerMode(PowerState state) {
+void DeviceStateManager::setPowerState(PowerState state) {
 
     esp_err_t ret = ESP_FAIL;
 
@@ -81,18 +81,18 @@ void DeviceStateManager::setPowerMode(PowerState state) {
 }
 
 
-void DeviceStateManager::updateNetworkState(NetworkState new_state) {
+void DeviceStateManager::setNetworkState(NetworkState new_state) {
     networkState_ = new_state;
 
     switch(new_state) {
         case NetworkState::CONNECTED:
-            ESP_LOGI(TAG, "Network state updated: CONNECTED");
+            ESP_LOGI(TAG, "Network state set: CONNECTED");
             break;
         case NetworkState::DISCONNECTED:
-            ESP_LOGI(TAG, "Network state updated: DISCONNECTED");
+            ESP_LOGI(TAG, "Network state set: DISCONNECTED");
             break;
         case NetworkState::ERROR:
-            ESP_LOGE(TAG, "Network state updated: ERROR");
+            ESP_LOGE(TAG, "Network state set: ERROR");
             break;
     }
 }
