@@ -16,7 +16,7 @@ public:
 
     // Streaming interface
     static esp_err_t startStream(uint32_t fps = 30); // default 30 fps
-    static void stopStream();
+    static esp_err_t stopStream();
     static bool isStreaming();
     static bool isInitialized();
 

@@ -30,19 +30,17 @@ public:
     void onNetworkEvent(esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 
-
     // CameraState events
     CameraState getCameraState() const;
     void setCameraState(CameraState state);
+	
+
+    static const char* powerStateToString(PowerState state);
+    static const char* networkStateToString(NetworkState state);
+    static const char* cameraStateToString(CameraState state);
 
 private:
     PowerState powerState_;
     CameraState cameraState_;
     NetworkState networkState_;
-
-
-
-    static const char* powerStateToString(PowerState state);
-    static const char* networkStateToString(NetworkState state);
-    static const char* cameraStateToString(CameraState state);
 };
