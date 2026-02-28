@@ -3,12 +3,14 @@
 
 #include "esp_err.h"
 #include "esp_camera.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 
 class CameraManager {
 public:
-    static esp_err_t init();
+    static esp_err_t init(QueueHandle_t frame_queue);
     static esp_err_t deinit();
 
     static camera_fb_t* captureFrame();
@@ -23,8 +25,11 @@ public:
 private:
     static bool initialized_;
     static bool streaming_;
+
     static TaskHandle_t stream_task_handle_; // pointer to the video stream capture task
     static TickType_t stream_interval_;
+
+    static QueueHandle_t frame_queue_;
 
     static void streamTask(void* param);
 

@@ -2,8 +2,6 @@
 
 #include "CameraManager.h"
 #include "esp_log.h"
-#include "esp_camera.h"
-
 
 static const char* TAG = "CameraManager";
 
@@ -30,10 +28,13 @@ static const char* TAG = "CameraManager";
 
 bool CameraManager::initialized_ = false;
 bool CameraManager::streaming_ = false;
+
 TaskHandle_t CameraManager::stream_task_handle_ = nullptr;
 TickType_t CameraManager::stream_interval_ = 0;
 
-esp_err_t CameraManager::init() {
+QueueHandle_t CameraManager::frame_queue_ = nullptr;
+
+esp_err_t CameraManager::init(QueueHandle_t frame_queue) {
     if (initialized_) {
         ESP_LOGW(TAG, "CameraManager already initialized");
         return ESP_OK;
@@ -72,6 +73,9 @@ esp_err_t CameraManager::init() {
     config.fb_count     = 2;
     config.grab_mode    = CAMERA_GRAB_LATEST;
     config.fb_location  = CAMERA_FB_IN_PSRAM; // use PSRAM
+	
+
+    frame_queue_ = frame_queue;
 
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
@@ -204,23 +208,25 @@ bool CameraManager::isInitialized() {
 
 // --- streaming task ---
 void CameraManager::streamTask(void* param) {
-
     TickType_t interval = stream_interval_;
 
     while (streaming_) {
         camera_fb_t* fb = CameraManager::captureFrame();
         if (fb) {
+            ESP_LOGI(TAG,
+                     "Frame: %ux%u | %u bytes | ts: %ld.%06ld",
+                     fb->width,
+                     fb->height,
+                     fb->len,
+                     fb->timestamp.tv_sec,
+                     fb->timestamp.tv_usec);
 
-        ESP_LOGI(TAG,
-                 "Frame: %ux%u | %u bytes | ts: %ld.%06ld",
-                 fb->width,
-                 fb->height,
-                 fb->len,
-                 fb->timestamp.tv_sec,
-                 fb->timestamp.tv_usec);
-
-
-	CameraManager::returnFrame(fb);
+            if (xQueueSend(frame_queue_, &fb, 0) != pdPASS) {
+                ESP_LOGW(TAG, "Frame queue full — dropping frame");
+                CameraManager::returnFrame(fb);
+            } else{
+    		ESP_LOGI(TAG, "Frame pushed to queue successfully");
+			}
         } else {
             ESP_LOGE(TAG, "Failed to capture frame during streaming");
         }
@@ -231,4 +237,3 @@ void CameraManager::streamTask(void* param) {
     stream_task_handle_ = nullptr;
     vTaskDelete(nullptr);
 }
-
