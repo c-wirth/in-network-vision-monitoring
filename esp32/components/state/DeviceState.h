@@ -5,7 +5,7 @@
 
 enum class PowerState { IDLE, HIGH_POWER, ERROR };
 enum class CameraState { IDLE, OFF, SINGLE_CAPTURE, CAPTURE_STREAM, ERROR };
-enum class NetworkState { DISCONNECTED, CONNECTING, CONNECTED, ERROR };
+enum class NetworkState { DISCONNECTED, CONNECTED, ERROR };
 
 class DeviceStateManager {
 public:
@@ -19,6 +19,9 @@ public:
     // power state events
     void setPowerMode(PowerState state);
  
+    // Network state events
+    void setNetworkState(NetworkState new_state);
+
 
     // TODO CHANGE THESE TO ONE PARAMETERIZED FUNCTION
     // camera state events
@@ -27,9 +30,6 @@ public:
     void requestSingleCapture();
     void requestCaptureStream();
 
-    // Network state events
-    void networkConnected();
-    void networkDisconnected();
 
 private:
     PowerState powerState_;

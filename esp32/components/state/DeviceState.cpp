@@ -1,7 +1,10 @@
+// DeviceState.cpp
+
+
 #include "DeviceState.h"
-#include "PowerManager.h"
 // #include "CameraDriver.h"
-// #include "NetworkManager.h"
+#include "PowerManager.h"
+ #include "NetworkManager.h"
 #include "LEDDriver.h"
 #include "esp_log.h"
 
@@ -14,7 +17,21 @@ DeviceStateManager::DeviceStateManager():
 	cameraState_(CameraState::OFF),
 	networkState_(NetworkState::DISCONNECTED)
 {
+
 	ESP_LOGI(TAG, "DeviceStateManager initialized with default states");
+
+
+        // Register network event callback
+        NetworkManager::setEventCallback(
+            [this](esp_event_base_t event_base, int32_t event_id, void* event_data) {
+                if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+                    this->updateNetworkState(NetworkState::DISCONNECTED);
+                }
+                else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+                    this->updateNetworkState(NetworkState::CONNECTED);
+                }
+            }
+        );
 }
 
 
@@ -60,5 +77,22 @@ void DeviceStateManager::setPowerMode(PowerState state) {
 
     } else {
         powerState_ = state;
+    }
+}
+
+
+void DeviceStateManager::updateNetworkState(NetworkState new_state) {
+    networkState_ = new_state;
+
+    switch(new_state) {
+        case NetworkState::CONNECTED:
+            ESP_LOGI(TAG, "Network state updated: CONNECTED");
+            break;
+        case NetworkState::DISCONNECTED:
+            ESP_LOGI(TAG, "Network state updated: DISCONNECTED");
+            break;
+        case NetworkState::ERROR:
+            ESP_LOGE(TAG, "Network state updated: ERROR");
+            break;
     }
 }
