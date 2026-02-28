@@ -1,0 +1,42 @@
+menu "Streaming Configuration"
+
+config WIFI_SSID
+    string "WiFi SSID"
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+
+config SERVER_IP
+    string "UDP Server IP"
+
+config SERVER_FRAME_PORT
+    int "UDP Frame Port"
+
+config DEVICE_CONTROL_PORT
+    int "Device Control Port"
+
+config UDP_HANDSHAKE_MAX_RETRIES
+    int "UDP Handshake Max Retries"
+
+config UDP_HANDSHAKE_PING_INTERVAL_MS
+    int "UDP Handshake Ping Interval (ms)"
+
+config UDP_ALIVE_TIMEOUT_MS
+    int "UDP Alive Timeout (ms)"
+
+config UDP_HANDSHAKE_TIMEOUT_MS
+    int "UDP Handshake Timeout (ms)"
+
+config CAMERA_CAPTURE_RATE_FPS
+    int "Camera Capture Rate (fps)"
+
+config FRAMESIZE
+    int "Camera Frame Size"
+
+config JPEG_QUALITY
+    int "Camera JPEG Quality"
+
+config XCLK_FREQ_HZ
+    int "Camera XCLK Frequency (Hz)"
+
+endmenu
