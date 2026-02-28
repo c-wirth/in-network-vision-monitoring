@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS PowerStateTests.cpp
+    SRCS
     INCLUDE_DIRS "."
-    REQUIRES esp_pm log state led_driver network_manager power_manager unity
+    REQUIRES
 )
