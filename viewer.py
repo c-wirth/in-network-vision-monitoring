@@ -1,50 +1,55 @@
 import cv2
-import glob
 import os
 import sys
+import argparse
 
-# --- config ---
-FPS = 5
-FRAME_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("/Users/colby/Desktop/stream_test/20260227_210648")
+def main():
+    parser = argparse.ArgumentParser(description="Simple image sequence viewer")
+    parser.add_argument("fps", type=int, help="Frames per second")
+    parser.add_argument("directory", type=str, help="Directory containing images")
 
-# --- load frames in order ---
-frame_paths = sorted(glob.glob(os.path.join(FRAME_DIR, "frame_*.jpg")))
+    args = parser.parse_args()
 
-if not frame_paths:
-    print(f"No frames found in {FRAME_DIR}")
-    sys.exit(1)
+    fps = args.fps
+    image_dir = args.directory
+    delay = int(1000 / fps)
 
-print(f"Playing {len(frame_paths)} frames at {FPS} FPS from {FRAME_DIR}")
-print("Press 'q' to quit, space to pause")
+    if not os.path.isdir(image_dir):
+        print(f"Error: Directory '{image_dir}' does not exist.")
+        sys.exit(1)
 
-delay_ms = int(1000 / FPS)
-paused = False
+    images = sorted([
+        os.path.join(image_dir, f)
+        for f in os.listdir(image_dir)
+        if f.lower().endswith((".png", ".jpg", ".jpeg"))
+    ])
 
-for path in frame_paths:
-    frame = cv2.imread(path)
-    if frame is None:
-        print(f"Could not read {path} — skipping")
-        continue
+    if not images:
+        print("No images found in directory.")
+        sys.exit(1)
 
-    # Rotate frame 180 degrees
-    frame = cv2.rotate(frame, cv2.ROTATE_180)
-
-    cv2.imshow("Stream Playback", frame)
+    index = 0
+    playing = True
 
     while True:
-        key = cv2.waitKey(0 if paused else delay_ms) & 0xFF
+        img = cv2.imread(images[index])
+        cv2.imshow("Viewer", img)
+
+        key = cv2.waitKey(delay if playing else 0) & 0xFF
 
         if key == ord('q'):
-            cv2.destroyAllWindows()
-            sys.exit(0)
-
-        elif key == ord(' '):
-            paused = not paused
-            if not paused:
-                break
-
-        else:
             break
+        elif key == ord(' '):  # Spacebar toggle play/pause
+            playing = not playing
+        elif key == 81:  # Left arrow
+            index = max(0, index - 1)
+        elif key == 83:  # Right arrow
+            index = min(len(images) - 1, index + 1)
 
-cv2.destroyAllWindows()
-print("Playback complete")
+        if playing:
+            index = (index + 1) % len(images)
+
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()

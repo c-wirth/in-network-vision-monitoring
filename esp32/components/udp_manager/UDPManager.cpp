@@ -219,7 +219,7 @@ esp_err_t UDPManager::startStream() {
         "UDPSendTask",
         8192,
         nullptr,
-        9,
+        20,
         &send_task_handle_
     );
 

@@ -20,8 +20,6 @@ FLAG_ALIVE          = 0x0006
 
 HEADER_SIZE = 8
 
-print("exiting")
-
 def make_packet(flags, payload=b''):
     header = struct.pack('>HHHH', 0, 0, 0, flags)
     return header + payload
@@ -38,6 +36,18 @@ print(f"Saving frames to {out_dir}")
 # --- socket setup ---
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(("0.0.0.0", SERVER_FRAME_PORT))
+
+# --- flush stale packets before handshake ---
+print("Flushing stale packets...")
+sock.settimeout(0.2)
+stale_pre = 0
+while True:
+    try:
+        sock.recvfrom(1400)
+        stale_pre += 1
+    except socket.timeout:
+        break
+
 sock.settimeout(1.0)
 
 # --- handshake ---
@@ -46,11 +56,9 @@ while True:
     try:
         data, addr = sock.recvfrom(1400)
         if len(data) >= HEADER_SIZE:
-            print(f"Message received from {addr}")
             flags = struct.unpack('>H', data[6:8])[0]
             if flags == FLAG_HANDSHAKE:
                 print(f"Handshake received from {addr} — sending ACK")
-                print(f"Sending ACK to {DEVICE_IP}:{DEVICE_CONTROL_PORT}")
                 ack = make_packet(FLAG_HANDSHAKE_ACK)
                 sock.sendto(ack, (DEVICE_IP, DEVICE_CONTROL_PORT))
                 break
@@ -58,24 +66,26 @@ while True:
         continue
 
 # --- start stream ---
-time.sleep(0.1)
+time.sleep(1.0)
 print("Sending START_STREAM")
 send_control(sock, FLAG_START_STREAM)
 
 # --- receive loop ---
-fragments     = defaultdict(dict)   # frame_id -> {frag_id: payload}
-frame_totals  = {}                  # frame_id -> total_frags expected
-frames_saved  = 0
-frame_times   = {}                  # arrival time of first fragment per frame
-last_alive    = time.time()
-stream_start  = time.time()
+fragments    = defaultdict(dict)
+frame_totals = {}
+frames_saved = 0
+frame_times  = {}
+last_alive   = time.time()
+stream_start = time.time()
 
-sock.settimeout(0.05)  # 50ms poll so alive signal stays on time
+sock.settimeout(0.05)
 
 print(f"Streaming for {STREAM_DURATION_SEC} seconds...")
 
+stale_post = 0
+
 while True:
-    now = time.time()
+    now     = time.time()
     elapsed = now - stream_start
 
     # --- send alive ---
@@ -87,6 +97,14 @@ while True:
     if elapsed >= STREAM_DURATION_SEC:
         print("Sending STOP_STREAM")
         send_control(sock, FLAG_STOP_STREAM)
+
+        sock.settimeout(0.2)
+        while True:
+            try:
+                sock.recvfrom(1400)
+                stale_post += 1
+            except socket.timeout:
+                break
         break
 
     # --- receive packet ---
@@ -100,49 +118,50 @@ while True:
 
     frame_id, frag_id, total_frags, flags = struct.unpack('>HHHH', data[:8])
     payload = data[HEADER_SIZE:]
-    print(f"Packet: frame_id={frame_id} frag={frag_id}/{total_frags} flags=0x{flags:04X} len={len(payload)}")
 
-    # ignore control packets on this port
     if flags != 0:
         continue
 
     recv_time = time.time()
 
-    # record arrival time of first fragment for latency reference
     if frame_id not in frame_times:
         frame_times[frame_id] = recv_time
 
-    fragments[frame_id][frag_id]  = payload
-    frame_totals[frame_id]        = total_frags
+    fragments[frame_id][frag_id] = payload
+    frame_totals[frame_id]       = total_frags
 
-    # check if frame is complete
     if len(fragments[frame_id]) == total_frags:
-        jpeg = b''.join(fragments[frame_id][i] for i in range(total_frags))
-        filename = os.path.join(out_dir, f"frame_{frame_id:05d}.jpg")
-        with open(filename, 'wb') as f:
-            f.write(jpeg)
-        frames_saved += 1
+        if all(i in fragments[frame_id] for i in range(total_frags)):
+            jpeg = b''.join(fragments[frame_id][i] for i in range(total_frags))
+            filename = os.path.join(out_dir, f"frame_{frame_id:05d}.jpg")
+            with open(filename, 'wb') as f:
+                f.write(jpeg)
+            frames_saved += 1
+        else:
+            print(f"Frame {frame_id} missing fragments — dropping")
         del fragments[frame_id]
         del frame_totals[frame_id]
 
 # --- stats ---
 total_time = time.time() - stream_start
-fps = frames_saved / total_time if total_time > 0 else 0
+fps        = frames_saved / total_time if total_time > 0 else 0
 
-# inter-frame latency — average gap between consecutive frame arrivals
 sorted_times = [frame_times[k] for k in sorted(frame_times)]
 if len(sorted_times) > 1:
-    gaps = [sorted_times[i+1] - sorted_times[i] for i in range(len(sorted_times)-1)]
+    gaps           = [sorted_times[i+1] - sorted_times[i] for i in range(len(sorted_times) - 1)]
     avg_latency_ms = (sum(gaps) / len(gaps)) * 1000
 else:
     avg_latency_ms = 0
 
 print(f"\n--- Results ---")
-print(f"Duration:        {total_time:.2f}s")
-print(f"Frames saved:    {frames_saved}")
-print(f"FPS:             {fps:.2f}")
-print(f"Avg inter-frame: {avg_latency_ms:.1f}ms")
-print(f"Incomplete frames dropped: {len(fragments)}")
-print(f"Output:          {out_dir}")
+print(f"Duration:            {total_time:.2f}s")
+print(f"Frames saved:        {frames_saved}")
+print(f"FPS:                 {fps:.2f}")
+print(f"Avg inter-frame:     {avg_latency_ms:.1f}ms")
+print(f"Incomplete dropped:  {len(fragments)}")
+print(f"Stale pre-session:   {stale_pre}")
+print(f"Stale post-session:  {stale_post}")
+print(f"Total stale:         {stale_pre + stale_post}")
+print(f"Output:              {out_dir}")
 
 sock.close()

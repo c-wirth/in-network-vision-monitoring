@@ -2,8 +2,12 @@
 
 #include "CameraManager.h"
 #include "esp_log.h"
+#include "sensor.h"
 
 static const char* TAG = "CameraManager";
+
+#define FRAMESIZE    ((framesize_t)CONFIG_FRAMESIZE)
+#define JPEG_QUALITY CONFIG_JPEG_QUALITY
 
 // Freenove ESP32-S3 Camera pin mapping
 #define CAM_PIN_D0      11
@@ -65,11 +69,11 @@ esp_err_t CameraManager::init(QueueHandle_t frame_queue) {
     config.pin_pwdn  = CAM_PIN_PWDN;
     config.pin_reset = CAM_PIN_RESET;
 
-    config.xclk_freq_hz = 10000000; // 10 MHz for Freenove
+    config.xclk_freq_hz = 20000000; // 20 MHz for Freenove
     config.pixel_format = PIXFORMAT_JPEG;
 
-    config.frame_size   = FRAMESIZE_VGA; 
-    config.jpeg_quality = 12;
+    config.frame_size   = FRAMESIZE;
+    config.jpeg_quality = JPEG_QUALITY;
     config.fb_count     = 2;
     config.grab_mode    = CAMERA_GRAB_LATEST;
     config.fb_location  = CAMERA_FB_IN_PSRAM; // use PSRAM

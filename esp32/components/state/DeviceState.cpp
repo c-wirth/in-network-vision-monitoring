@@ -192,6 +192,11 @@ void DeviceStateManager::setUDPState(UDPState state) {
             break;
 
         case UDPState::CONNECTED_IDLE:
+            if (UDPManager::isStreaming()) {
+                ESP_LOGI(TAG, "Stopping Stream");
+                ret = UDPManager::stopStream();
+                if (ret != ESP_OK) break;
+            }
             if (UDPManager::isInitialized()) {
                 ESP_LOGW(TAG, "UDPManager already initialized");
             } else {
