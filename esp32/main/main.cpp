@@ -26,9 +26,9 @@ extern "C" void app_main(void)
     while (true)
     {
         gpio_set_level(LED_GPIO, 1);  // LED ON
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
         gpio_set_level(LED_GPIO, 0);  // LED OFF
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
