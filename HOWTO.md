@@ -48,7 +48,7 @@ Connect your ESP32-S3 via a USB-to-Serial adapter and run:
 idf.py -p /dev/cu.wchusbserial5AB90094641 flash monitor
 ```
 
-* Replace `/dev/cu.wchusbserial5AB90094641` with your serial port if different.
+* Replace `/dev/cu.wchusbserial5AB90094641` with the serial port if different.
 * The command will flash the firmware and start the serial monitor.
 
 ---
