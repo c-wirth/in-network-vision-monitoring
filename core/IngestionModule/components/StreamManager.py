@@ -30,10 +30,10 @@ class StreamManager:
     def _push_frame(self, frame):
         """
         Push a new frame into the buffer.
-        frame_id wraps every 256 frames.
+        frame_id wraps every self.max_frames frames.
         """
         with self.lock:
-            self.frame_id = (self.frame_id + 1) % 256
+            self.frame_id = (self.frame_id + 1) % self.max_frames
             idx = self.frame_id % self.max_frames
             self.buffer[idx] = frame
 
@@ -48,7 +48,7 @@ class StreamManager:
                 return None, None
 
             # compute next frame_id
-            next_frame_id = (last_seen + 1) % 256
+            next_frame_id = (last_seen + 1) % self.max_frames
             idx = next_frame_id % self.max_frames
             frame = self.buffer[idx]
 
