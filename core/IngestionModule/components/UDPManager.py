@@ -1,8 +1,12 @@
 #UDPManager.py
 import socket
 import time
+import threading
+import os
+from PIL import Image
+import io
 
-from EventBus import BusEvents
+from .EventBus import BusEvents
 
 FLAG_HANDSHAKE      = 0x0001
 FLAG_HANDSHAKE_ACK  = 0x0002
@@ -16,14 +20,21 @@ HEADER_SIZE = 8
 
 class UDPManager:
 
-    def __init__(self, cfg, bus: EventBus):
+    def __init__(self, cfg, bus, simulate_stream=False):
         self.bus = bus
         self.cfg = cfg
         self.is_running = False
-        self._establish_connection()
 
-        self.bus.subscribe(BusEvents.CONTROL_SIGNAL, self._handle_incoming_command) # incoming signals from application layer
+        self.simulate_stream = cfg.get("simulate_stream", False)
+        self.simulation_dir = cfg.get("simulation_dir", None)
+        self.simulation_interval = cfg.get("simulation_interval", 0.01)
 
+        self._stream_thread = None
+
+        if not self.simulate_stream:
+            self._establish_connection()
+
+        self.bus.subscribe(BusEvents.CONTROL_SIGNAL, self._handle_incoming_command)
 
     def _establish_connection(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -130,25 +141,88 @@ class UDPManager:
     def _handle_incoming_command(self, cmd):
         """
         Handles commands from the Application Layer via the bus.
-        Only START_STREAM and STOP_STREAM go to the edge device.
-        SHUTDOWN only stops this ingestion layer.
+        START_STREAM/STOP_STREAM either triggers UDP or simulation.
         """
         action = cmd.get("action")
 
         if action == "start_stream":
-            if not self.is_running:
-                self.send_control(FLAG_START_STREAM)
-                self.is_running = True
+            if self.is_running:
+                print("Stream already running")
+                return
 
-                threading.Thread(target=self._start_receiving, daemon=True).start()
+            self.is_running = True
 
-                self.bus.publish(BusEvents.START_STREAM)  # notify FrameParser / StreamManager
+            if self.simulate_stream:
+                print("Starting simulated stream...")
+                self._stream_thread = threading.Thread(target=self._simulate_stream, daemon=True)
+            else:
+                print("Starting real UDP stream...")
+                self._stream_thread = threading.Thread(target=self._start_receiving, daemon=True)
+
+            self._stream_thread.start()
+            self.bus.publish(BusEvents.START_STREAM)
 
         elif action == "stop_stream":
-            if self.is_running:
+            if not self.is_running:
+                print("Stream not running")
+                return
+
+            print("Stopping stream...")
+            self.is_running = False
+            if not self.simulate_stream:
                 self.send_control(FLAG_STOP_STREAM)
-                self.is_running = False
-                self.bus.publish(BusEvents.STOP_STREAM)  # notify FrameParser / StreamManager
+
+            if self._stream_thread and self._stream_thread.is_alive():
+                self._stream_thread.join(timeout=1.0)
+            self.bus.publish(BusEvents.STOP_STREAM)
+            print("Stream stopped")
 
         else:
-            print(f"UNKNOWN action received by the UDPManager: received {action}")
+            print(f"UNKNOWN action received by UDPManager: {action}")
+
+
+    def compress_frame(self, frame_bytes: bytes) -> bytes:
+        """Re-encode JPEG frames to simulate compression."""
+        with Image.open(io.BytesIO(frame_bytes)) as img:
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG")
+            return buf.getvalue()
+
+
+    def _simulate_stream(self):
+        """Publish frames sequentially from a folder, preserving order with a simple counter as frame_id."""
+        if not self.simulation_dir or not os.path.exists(self.simulation_dir):
+            print("Simulation directory invalid")
+            return
+
+        files = sorted(os.listdir(self.simulation_dir))
+        if not files:
+            print("No frames found in simulation directory")
+            return
+
+        frame_id = 0  # sequential ID independent of filename
+
+        for fname in files:
+            if not self.is_running:
+                print("Simulation stopped before completing all frames")
+                return  # stop gracefully
+
+            path = os.path.join(self.simulation_dir, fname)
+            with open(path, "rb") as f:
+                frame_bytes = f.read()
+
+            compressed_frame = self.compress_frame(frame_bytes)
+
+            self.bus.publish(BusEvents.FRAME_READY, {
+                "frame_id": frame_id,
+                "frame": compressed_frame
+            })
+
+            #print(f"[DEBUG UDPManager] Published frame_id={frame_id}, file={fname}")
+
+            frame_id += 1
+            time.sleep(self.simulation_interval)
+
+        print("Simulation finished: all frames published")
+        self.is_running = False
+        self.bus.publish(BusEvents.STOP_STREAM)

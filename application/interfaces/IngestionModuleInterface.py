@@ -1,5 +1,5 @@
 # IngestionModuleInferface.py
-from core.IngestionModule.components import EventBus, UDPManager, FrameParser, StreamManager
+from core.IngestionModule.components import EventBus, BusEvents, UDPManager, FrameParser, StreamManager
 
 class IngestionModuleInterface:
     def __init__(self, udp_cfg):
@@ -7,7 +7,7 @@ class IngestionModuleInterface:
         self.bus = EventBus()
         self.udp_manager = UDPManager(udp_cfg, self.bus)
         self.frame_parser = FrameParser(self.bus)
-        self.stream_manager = StreamManager(self.bus)
+        self._stream_manager = StreamManager(self.bus)
 
 
     def register_consumer(self, consumer: "Consumer"):

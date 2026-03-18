@@ -2,9 +2,9 @@
 
 import time
 
-from application.components import Consumers
-from application.interfaces import IngestionModuleInterface 
-from application.services import StreamService
+from application.components.Consumers import Consumers
+from application.interfaces.IngestionModuleInterface import IngestionModuleInterface 
+from application.services.StreamService import StreamService
 
 udp_cfg = {
     "handshake_timeout_sec": 3.0,
@@ -12,6 +12,11 @@ udp_cfg = {
     "device_control_port": 5006,
     "device_frame_port": 5005,
     "alive_interval_sec": 1.0,
+
+
+   "simulate_stream": True,
+   "simulation_dir": "/Users/colby/Desktop/sim_clip/",
+   "simulation_interval": 0.01
 }
 
 
@@ -31,17 +36,17 @@ class ApplicationModule:
 
 
         # -- Instantiate Services
-        self.stream_service = StreamService(ingestion_interface)
+        self.stream_service = StreamService(self.ingestion_interface)
  
 
 
     def start_stream(self):
-        self.ingestion_module.start_stream()
+        self.ingestion_interface.start_stream()
         self.stream_service.start()
 
 
     def stop_stream(self):
-        self.ingestion_module.stop_stream()
+        self.ingestion_interface.stop_stream()
         self.stream_service.stop()
 
 
@@ -62,9 +67,12 @@ class ApplicationModule:
 
 
 def main():
-    print("Beginning 3 second stream test.")
+    print("Beginning 10 second stream test.")
     app = ApplicationModule(udp_cfg)
     app.start_stream()
-    while True:
-        time.sleep(3)
-        app.stop_stream()
+    time.sleep(20)
+    app.stop_stream()
+
+
+if __name__ == "__main__":
+    main()

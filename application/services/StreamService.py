@@ -2,7 +2,7 @@
 import os
 import time
 import threading
-from application.components import Consumers
+from application.components.Consumers import Consumers
 
 
 class StreamService:
@@ -11,7 +11,7 @@ class StreamService:
     and writes them to a directory (simulating a live stream for the frontend).
     """
 
-    def __init__(self, ingestion_interface, output_dir="stream_output", poll_interval=0.01):
+    def __init__(self, ingestion_interface, output_dir="/Users/colby/Desktop/stream_output", poll_interval=0.01):
         """
         :param ingestion_interface: Instance of IngestionModuleInterface
         :param output_dir: Where to save frames
@@ -54,8 +54,6 @@ class StreamService:
             frame_idx, frame = self.ingestion_interface.poll_frame(Consumers.Streamer)
             if frame is not None:
                 self._save_frame(frame_idx, frame)
-            else:
-                print("DEBUG: NO FRAME RECEIVED IN StreamService._run()")
             time.sleep(self.poll_interval)
 
 
@@ -64,7 +62,6 @@ class StreamService:
         Save a frame to the output directory.
         Frame filename includes internal index to preserve order.
         """
-        filename = os.path.join(self.output_dir, f"frame_{frame_idx:04d}.bin")
+        filename = os.path.join(self.output_dir, f"frame_{frame_idx:04d}.jpg")
         with open(filename, "wb") as f:
             f.write(frame_bytes)
-        print(f"DEBUG [StreamService] Saved frame {frame_idx}")

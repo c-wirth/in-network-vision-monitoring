@@ -1,10 +1,10 @@
 # FrameParser.py
 import threading
 from collections import defaultdict
-from EventBus import EventBus, BusEvents
+from .EventBus import BusEvents
 
 class FrameParser:
-    def __init__(self, bus: EventBus):
+    def __init__(self, bus):
         self.bus = bus
         self.bus.subscribe(BusEvents.FRAME_RECEIVED, self._handle_fragment)
 
