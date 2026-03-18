@@ -36,7 +36,6 @@ class FrameParser:
                 # Publish full frame to downstream (StreamManager)
                 self.bus.publish(BusEvents.FRAME_READY, {"frame_id": frame_id, "frame": frame_bytes})
 
-                # Clean up
                 del self._fragments[frame_id]
                 del self._total_frags[frame_id]
 

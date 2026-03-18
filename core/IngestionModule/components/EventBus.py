@@ -9,16 +9,20 @@ class BusEvents:
     FRAME_READY    = "frame_ready"
 
 
+import threading
+
 class EventBus:
     def __init__(self):
-        # Dictionary: topic -> list of callbacks
         self._subscribers = defaultdict(list)
+        self._lock = threading.Lock()
 
     def subscribe(self, topic, callback):
-        """Register a callback for a specific topic."""
-        self._subscribers[topic].append(callback)
+        with self._lock:
+            self._subscribers[topic].append(callback)
 
     def publish(self, topic, payload=None):
-        """Call all callbacks registered for this topic with the payload."""
-        for callback in self._subscribers.get(topic, []):
+        with self._lock:
+            callbacks = list(self._subscribers.get(topic, []))
+
+        for callback in callbacks:
             callback(payload)

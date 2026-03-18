@@ -139,7 +139,9 @@ class UDPManager:
             if not self.is_running:
                 self.send_control(FLAG_START_STREAM)
                 self.is_running = True
-                self._start_receiving()
+
+                threading.Thread(target=self._start_receiving, daemon=True).start()
+
                 self.bus.publish(BusEvents.START_STREAM)  # notify FrameParser / StreamManager
 
         elif action == "stop_stream":

@@ -2,9 +2,8 @@
 
 import time
 
-from application.components import Consumers
-from application.interfaces import IngestionModuleInterface 
-from application.services import StreamService
+from core.IngestionModule import IngestionModule
+from application.components import, IngestionModuleInterface Consumers
 
 udp_cfg = {
     "handshake_timeout_sec": 3.0,
@@ -24,25 +23,24 @@ class ApplicationModule:
 
 
         #  -- Instantiate Application Layer interfaces
-        self.ingestion_interface = IngestionModuleInterface(udp_cfg)
+        self.ingestion_interface = IngestionModuleInterface(self.ingestion_module.stream_manager)
         # TODO: instantiate clip ingestion service
         # TODO: instantite clip retrieval service
         # TODO: Instantiate Auth Service
-
-
-        # -- Instantiate Services
-        self.stream_service = StreamService(ingestion_interface)
  
+
+        # Register consumers for the Ingestion Module
+        self.ingestion_interface.register_consumer(Consumers.ML_LAYER)
+        self.ingestion_interface.register_consumer(Consumers.Streamer)
 
 
     def start_stream(self):
         self.ingestion_module.start_stream()
-        self.stream_service.start()
 
 
     def stop_stream(self):
+        pass
         self.ingestion_module.stop_stream()
-        self.stream_service.stop()
 
 
     def start_detection_service(self):
@@ -62,9 +60,8 @@ class ApplicationModule:
 
 
 def main():
-    print("Beginning 3 second stream test.")
     app = ApplicationModule(udp_cfg)
     app.start_stream()
     while True:
-        time.sleep(3)
-        app.stop_stream()
+
+        time.sleep(1)
