@@ -45,7 +45,7 @@ export default function Layout() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{user?.username}</p>
+              <p className="text-sm font-medium">{user?.email}</p>
               <Badge variant={user?.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                 {user?.role}
               </Badge>

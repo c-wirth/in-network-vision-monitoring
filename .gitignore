@@ -28,12 +28,9 @@ esp32/dependencies.lock
 */.cache/
 /.pio/
 
-# Secrets
-.env
-server/auth.db
 
-# OS / editor
+server/auth.db
+.env
 .DS_Store
-.idea/
 .vscode/
-*.swp
+server/auth.db

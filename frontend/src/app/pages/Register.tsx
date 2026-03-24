@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,25 +7,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Video, Shield } from 'lucide-react';
 
-export default function Login() {
+export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const success = await login(email, password);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (success) {
-      navigate('/');
-    } else {
-      setError('Invalid email or password');
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      // On success → redirect back to login
+      navigate('/login');
+    } catch (err) {
+      setError('Unable to register. Email may already exist.');
     }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -37,8 +46,8 @@ export default function Login() {
             <Shield className="w-8 h-8" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Security Monitoring System</CardTitle>
-            <CardDescription>Sign in to access the dashboard</CardDescription>
+            <CardTitle className="text-2xl">Create Account</CardTitle>
+            <CardDescription>Register a new user</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -54,6 +63,7 @@ export default function Login() {
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -65,18 +75,21 @@ export default function Login() {
                 required
               />
             </div>
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
             <Button type="submit" className="w-full">
-              Sign In
+              Register
             </Button>
           </form>
+
           <div className="mt-4 text-center text-sm">
-            <Link to="/register" className="text-primary hover:underline">
-                Create Account
+            <Link to="/login" className="text-primary hover:underline">
+              Back to Login
             </Link>
           </div>
         </CardContent>
