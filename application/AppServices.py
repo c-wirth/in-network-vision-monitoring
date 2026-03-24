@@ -6,21 +6,9 @@ from application.components.Consumers import Consumers
 from application.interfaces.IngestionModuleInterface import IngestionModuleInterface 
 from application.services.StreamService import StreamService
 
-udp_cfg = {
-    "handshake_timeout_sec": 3.0,
-    "device_ip": "192.168.40.12",
-    "device_control_port": 5006,
-    "device_frame_port": 5005,
-    "alive_interval_sec": 1.0,
 
 
-   "simulate_stream": True,
-   "simulation_dir": "/Users/colby/Desktop/sim_clip/",
-   "simulation_interval": 0.01
-}
-
-
-class ApplicationModule:
+class ApplicationServices:
     """
     Application Layer container for independent services.
     Provides access to the core-layer modules through their interfaces.
@@ -67,8 +55,12 @@ class ApplicationModule:
 
 
 def main():
+
+    with open("cfg.json", 'r') as cfg:
+        udp_cfg = json.load(f)
+
     print("Beginning 10 second stream test.")
-    app = ApplicationModule(udp_cfg)
+    app = ApplicationServices(udp_cfg)
     app.start_stream()
     time.sleep(20)
     app.stop_stream()

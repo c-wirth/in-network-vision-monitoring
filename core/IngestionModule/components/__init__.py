@@ -1,4 +1,4 @@
-from .EventBus import EventBus, BusEvents
+from .IngestionEventBus import EventBus, BusEvents
 from .UDPManager import UDPManager
 from .FrameParser import FrameParser
 from .StreamManager import StreamManager
