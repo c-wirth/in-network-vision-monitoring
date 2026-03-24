@@ -1,5 +1,5 @@
 import threading
-from .EventBus import BusEvents
+from .IngestionEventBus import BusEvents
 
 
 class StreamManager:

@@ -6,7 +6,7 @@ import os
 from PIL import Image
 import io
 
-from .EventBus import BusEvents
+from .IngestionEventBus import BusEvents
 
 FLAG_HANDSHAKE      = 0x0001
 FLAG_HANDSHAKE_ACK  = 0x0002

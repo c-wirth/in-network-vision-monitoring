@@ -60,7 +60,7 @@ def main():
         udp_cfg = json.load(f)
 
     print("Beginning 10 second stream test.")
-    app = ApplicationModule(udp_cfg)
+    app = ApplicationServices(udp_cfg)
     app.start_stream()
     time.sleep(20)
     app.stop_stream()

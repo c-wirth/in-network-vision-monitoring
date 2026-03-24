@@ -1,7 +1,7 @@
 # FrameParser.py
 import threading
 from collections import defaultdict
-from .EventBus import BusEvents
+from .IngestionEventBus import BusEvents
 
 class FrameParser:
     def __init__(self, bus):
