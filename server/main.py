@@ -1,18 +1,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # server/main.py
 
 """
@@ -24,7 +12,8 @@ Responsibilities:
 - Provide authentication endpoints
 - Provide protected user endpoints
 """
-
+import os
+from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -34,6 +23,7 @@ from user_access.database import engine, Base, get_db
 from user_access import models, schemas
 
 # ---- Authentication Utilities ----
+from dotenv import load_dotenv
 from user_access.auth import (
     hash_password,
     verify_password,
@@ -52,9 +42,14 @@ app = FastAPI()
 # -----------------------------------------------------
 # Allow the Vite frontend (running on localhost:5173)
 # to communicate with this backend during development.
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+origins = [os.getenv("FRONTEND_URL")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

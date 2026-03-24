@@ -22,6 +22,10 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from . import models
 
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+
 
 # =====================================================
 # Password Hashing Configuration
@@ -52,9 +56,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT Configuration
 # =====================================================
 
-# IMPORTANT:
-# Replace this with a strong random secret in production.
-SECRET_KEY = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET"
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -147,3 +151,4 @@ def get_current_user(
         )
 
     return user
+
