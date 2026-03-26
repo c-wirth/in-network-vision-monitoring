@@ -1,0 +1,186 @@
+SERVICE LAYER INTEGRATION GUIDE
+
+============================================================
+PURPOSE
+============================================================
+
+This document defines how the service layer interacts with the database module.
+
+It establishes:
+- how to wire services to the DB module
+- how transactions are handled
+- how to structure service functions
+- how to coordinate database operations with external work
+
+This is a usage guide, not an explanation of the DB module itself.
+
+
+============================================================
+1. ARCHITECTURAL ROLE
+============================================================
+
+The service layer is responsible for orchestrating workflows.
+
+- It coordinates:
+  - database operations (via repositories)
+  - external operations (e.g., file handling)
+
+- It owns:
+  - transaction boundaries
+  - ordering of operations
+  - failure handling
+
+The DB module provides persistence tools only.
+It does not control workflows.
+
+
+============================================================
+2. WIRING
+============================================================
+
+Service modules import:
+- repository functions (create, read, delete operations)
+- optionally schemas for typing
+
+Example:
+    from db_infrastructure.db_components.repositories import create_clip, get_clip_by_id
+
+Database sessions:
+- are created outside the service layer (e.g., via FastAPI dependency)
+- are passed into service functions
+
+Services do not create or manage sessions.
+
+
+============================================================
+3. FUNCTION CONTRACT
+============================================================
+
+Service functions follow a consistent structure.
+
+Inputs:
+- db (database session)
+- validated data (already processed by schemas)
+
+Outputs:
+- ORM objects (e.g., Clip, User)
+- or simple data structures
+
+Service functions do not:
+- construct database sessions
+- expose database internals
+
+
+============================================================
+4. REPOSITORY USAGE
+============================================================
+
+Repositories provide data access only.
+
+- They accept a db session
+- They return ORM objects or lists
+- They do NOT commit transactions
+- They contain no business logic
+
+Services are responsible for combining repository calls into workflows.
+
+
+============================================================
+5. TRANSACTION BOUNDARY
+============================================================
+
+The service layer owns all transaction control.
+
+On success:
+    db.commit()
+
+On failure:
+    db.rollback()
+
+Rules:
+- No commits inside repositories
+- No partial commits
+- No implicit transaction handling
+
+Every service function must leave the database in a consistent state.
+
+
+============================================================
+6. COORDINATION PATTERN
+============================================================
+
+When combining database operations with external systems:
+
+Create flow:
+    external work → database write → commit
+
+Delete flow:
+    database read → external delete → database delete → commit
+
+Failure handling must restore consistency between systems.
+
+
+============================================================
+7. CANONICAL FLOWS
+============================================================
+
+Create (example pattern)
+
+    perform external work
+    create database record
+    commit
+
+    on failure:
+        rollback
+        undo external work
+
+
+Delete (example pattern)
+
+    fetch database record
+    perform external delete
+    delete database record
+    commit
+
+
+============================================================
+8. CONSTRAINTS
+============================================================
+
+The following rules must be enforced:
+
+- No database access in routes (use services)
+- No commits inside repositories
+- No external side effects inside repositories
+- No business logic inside the DB module
+
+
+============================================================
+9. VALIDATION
+============================================================
+
+Validation occurs before the service layer.
+
+Flow:
+    Request → Schema validation → Service → Repository → Database
+
+- Services assume inputs are valid
+- Repositories assume inputs are valid
+- Schemas enforce correctness
+
+
+============================================================
+GOAL
+============================================================
+
+Ensure:
+- consistent transaction handling
+- clear separation of concerns
+- predictable and debuggable workflows
+
+
+============================================================
+KEY IDEA
+============================================================
+
+The service layer is the only place where state changes are coordinated.
