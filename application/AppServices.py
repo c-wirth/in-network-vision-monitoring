@@ -1,6 +1,7 @@
 #app.py
 
 import time
+import json
 
 from application.components.Consumers import Consumers
 from application.interfaces.IngestionModuleInterface import IngestionModuleInterface 
@@ -57,7 +58,7 @@ class ApplicationServices:
 def main():
 
     with open("cfg.json", 'r') as cfg:
-        udp_cfg = json.load(f)
+        udp_cfg = json.load(cfg)
 
     print("Beginning 10 second stream test.")
     app = ApplicationServices(udp_cfg)
