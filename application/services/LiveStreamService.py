@@ -22,7 +22,7 @@ class LiveStreamService:
         self._lock = threading.Lock()
 
         # Register as a consumer
-        self.ingestion_interface.register_consumer(Consumers.Streamer)
+        self.ingestion_interface.register_consumer(Consumers.Live_Stream)
 
     def start(self):
         if not self._running:
@@ -35,12 +35,12 @@ class LiveStreamService:
         self._running = False
         if self._thread:
             self._thread.join()
-        self.ingestion_interface.unregister_consumer(Consumers.Streamer)
+        self.ingestion_interface.unregister_consumer(Consumers.Live_Stream)
         print("[LiveStreamService] Stopped.")
 
     def _run(self):
         while self._running:
-            frame_idx, frame_bytes = self.ingestion_interface.poll_frame(Consumers.Streamer)
+            frame_idx, frame_bytes = self.ingestion_interface.poll_frame(Consumers.Live_Stream)
             if frame_bytes:
                 # Save latest frame in memory
                 with self._lock:
