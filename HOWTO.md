@@ -58,3 +58,8 @@ idf.py -p /dev/cu.wchusbserial5AB90094641 flash monitor
 * Quit monitor: `Ctrl+]`
 * Open monitor menu: `Ctrl+T`
 * Help in monitor menu: `Ctrl+T` then `Ctrl+H`
+
+--- 
+
+# 6. Start the Server
+uvicorn application.main:app 

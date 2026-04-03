@@ -1,7 +1,5 @@
 #application/dependencies.py
 import json
-import signal
-import time
 
 from core.IngestionModule.IngestionModuleInterface import IngestionModuleInterface
 from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
@@ -35,7 +33,7 @@ _clip_ingestion_service.start()
 
 _ml_stream_service.start(test=True)
 
-time.sleep(60)
+# TODO on ctrl+c we need to gracefully call the stop functions
 #_ml_stream_service.stop()
 
 def get_live_stream_service() -> LiveStreamService:
