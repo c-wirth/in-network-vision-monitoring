@@ -1,5 +1,6 @@
 #application/dependencies.py
 import json
+import signal
 import time
 
 from core.IngestionModule.IngestionModuleInterface import IngestionModuleInterface
@@ -33,9 +34,9 @@ _clip_ingestion_service.start()
 
 
 _ml_stream_service.start(test=True)
-time.sleep(8)
-# on shutdown
-_ml_stream_service.stop()
+
+time.sleep(60)
+#_ml_stream_service.stop()
 
 def get_live_stream_service() -> LiveStreamService:
     return _live_stream_service
