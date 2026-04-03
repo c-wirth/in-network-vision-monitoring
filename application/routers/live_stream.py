@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from dependencies import get_live_stream_service
+from application.dependencies import get_live_stream_service
 
 router = APIRouter()
 

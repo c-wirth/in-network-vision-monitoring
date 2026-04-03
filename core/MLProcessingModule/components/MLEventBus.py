@@ -2,9 +2,9 @@ from collections import defaultdict
 import threading
 
 class BusEvents:
-    PUSH_FRAME_TO_ML_MODULE = "push_frame_to_ml_module"
+    PUSH_FRAME_TO_DETECTION_MANAGER = "push_frame_to_detection_manager"
     ON_DETECTION = "on_detection"
-    PUSH_SNAPSHOT_TO_BUILDER = "push_snapshot_to_builder"
+    CLIP_READY = "clip_ready"
 
 
 class EventBus:
