@@ -2,23 +2,34 @@
 
 
 from .MLEventBus import EventBus, BusEvents
-from collections import deque
 
 class FrameReceiver:
 
     def __init__(self, internal_frame_buffer_sz , bus: EventBus):
 
-        self.stream_thread = None
-        self.frame_buffer = deque(maxlen=internal_frame_buffer_sz)
+        self.buffer_size = internal_frame_buffer_sz
+        self.frame_buffer = [None] * self.buffer_size
+        self.write_idx = 0 # this is a refernce to the last written position in the frame_buffer
         self.bus = bus
-        self.bus.subscribe(BusEvents.FRAME_RECEIVED, self.handle_incoming_frame)
+
+        self.bus.subscribe(BusEvents.ON_DETECTION, self._on_detection)
 
 
     def receive(self, frame_bytes):
-        '''
-        polls a frame and puts it to the internal frame buffer, converts to np array first for compression
+            """
+            Inserts frame into ring buffer.
+            When write_idx wraps to 0, trigger detection event
+            """
 
-        if a frame is put into the first idx (idx 0) of the buffer, it is immediately pushed to the detection_buffer bus where it will override the old frame
-        '''
+            # write frame
+            self.frame_buffer[self.write_idx] = frame_bytes
 
+            # advance pointer and wrap
+            self.write_idx = (self.write_idx + 1) % self.buffer_size
 
+            if self.write_idx == 0:
+                self.bus.publish(BusEvents.PUSH_FRAME_TO_ML_MODULE, self.frame_buffer[0])
+
+    def _on_detection(self):
+        snapshot = list(self.frame_buffer)
+        self.bus.publish(BusEvents.PUSH_SNAPSHOT_TO_BUILDER, snapshot)

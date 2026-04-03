@@ -1,11 +1,11 @@
 from collections import defaultdict
+import threading
 
 class BusEvents:
-    FRAME_TO_ML_MODULE = "frame_to_ml_module"
-    #FRAME_READY    = "frame_ready"
+    PUSH_FRAME_TO_ML_MODULE = "push_frame_to_ml_module"
+    ON_DETECTION = "on_detection"
+    PUSH_SNAPSHOT_TO_BUILDER = "push_snapshot_to_builder"
 
-
-import threading
 
 class EventBus:
     def __init__(self):
