@@ -1,0 +1,8 @@
+{
+	"sample_rate_frames": 15,
+	"grace_period_samples": 8,
+	"max_clip_length": 300,
+	"confidence": 0.5,
+	"classes": [1]
+}
+
