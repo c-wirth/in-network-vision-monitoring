@@ -1,55 +1,38 @@
 import cv2
 import os
 import sys
-import argparse
+import time
 
-def main():
-    parser = argparse.ArgumentParser(description="Simple image sequence viewer")
-    parser.add_argument("fps", type=int, help="Frames per second")
-    parser.add_argument("directory", type=str, help="Directory containing images")
+# Usage: python3 view_frames.py frames_folder
+if len(sys.argv) < 2:
+    print("Usage: python3 view_frames.py frames_folder")
+    sys.exit(1)
 
-    args = parser.parse_args()
+frames_folder = sys.argv[1]
 
-    fps = args.fps
-    image_dir = args.directory
-    delay = int(1000 / fps)
+# Get all image files in folder and sort
+frame_files = sorted([
+    os.path.join(frames_folder, f)
+    for f in os.listdir(frames_folder)
+    if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+])
 
-    if not os.path.isdir(image_dir):
-        print(f"Error: Directory '{image_dir}' does not exist.")
-        sys.exit(1)
+if not frame_files:
+    print(f"No image files found in {frames_folder}")
+    sys.exit(1)
 
-    images = sorted([
-        os.path.join(image_dir, f)
-        for f in os.listdir(image_dir)
-        if f.lower().endswith((".png", ".jpg", ".jpeg"))
-    ])
+fps = 30
+delay = 1 / fps  # seconds per frame
 
-    if not images:
-        print("No images found in directory.")
-        sys.exit(1)
+for frame_file in frame_files:
+    frame = cv2.imread(frame_file)
+    if frame is None:
+        continue
 
-    index = 0
-    playing = True
+    cv2.imshow("Video Frames", frame)
+    
+    # Wait for delay, break if 'q' is pressed
+    if cv2.waitKey(int(delay * 1000)) & 0xFF == ord('q'):
+        break
 
-    while True:
-        img = cv2.imread(images[index])
-        cv2.imshow("Viewer", img)
-
-        key = cv2.waitKey(delay if playing else 0) & 0xFF
-
-        if key == ord('q'):
-            break
-        elif key == ord(' '):  # Spacebar toggle play/pause
-            playing = not playing
-        elif key == 81:  # Left arrow
-            index = max(0, index - 1)
-        elif key == 83:  # Right arrow
-            index = min(len(images) - 1, index + 1)
-
-        if playing:
-            index = (index + 1) % len(images)
-
-    cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    main()
+cv2.destroyAllWindows()

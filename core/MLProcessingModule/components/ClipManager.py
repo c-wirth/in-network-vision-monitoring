@@ -18,7 +18,7 @@ class ClipManager:
 
     def _push_clip_data(self, clip_data):
         """Update the current clip_data and mark it as unseen for all consumers."""
-        print("[DEBUG] in CLipManager._push_clip_data pushing a clip")
+        #print("[DEBUG] in CLipManager._push_clip_data pushing a clip")
         with self._lock:
             self._clip_data = clip_data
             self._consumer_seen = {k: False for k in self._consumer_seen}

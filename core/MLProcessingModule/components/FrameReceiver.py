@@ -45,7 +45,7 @@ class FrameReceiver:
         # If pointer wrapped back to 0, push the latest frame to detector
 
         if self.write_idx -1 == 0 and self.bus:
-            print(f"[DEBUG] idx: {self.write_idx} publishing ") 
+            #print(f"[DEBUG] idx: {self.write_idx} publishing ") 
             self.bus.publish(BusEvents.PUSH_FRAME_TO_DETECTION_MANAGER, frame_bytes)
 
 
