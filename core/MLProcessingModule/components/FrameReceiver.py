@@ -56,6 +56,7 @@ class FrameReceiver:
 
 
     def _on_detection(self, confidence):
+        # print("[DEBUG] _on_detection triggered")
         """
         Called when detection happens.
         - Wait until buffer is full or timeout occurs.
@@ -101,6 +102,7 @@ class FrameReceiver:
             }
 
             # ---- Publish clip ----
+            # print("[DEBUG] publishing CLIP_READY")
             self.bus.publish(BusEvents.CLIP_READY, clip_data)
 
 
