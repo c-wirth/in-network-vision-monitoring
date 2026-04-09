@@ -15,6 +15,7 @@ build/
 *.bin
 *.map
 *.log
+*.db
 
 # ESP-IDF generated
 sdkconfig

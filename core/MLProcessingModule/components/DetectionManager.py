@@ -29,7 +29,7 @@ class DetectionManager:
         Only considers 'person' class (COCO cls=0).
         Publishes ON_DETECTION event with max human confidence.
         """
-        print("[DEBUG] in DetectionManager._perform_detection")
+        # print("[DEBUG] in DetectionManager._perform_detection")
 
         # Load and resize image
         img = Image.open(BytesIO(frame_bytes)).convert("RGB")

@@ -1,7 +1,9 @@
-# main.py
+# application/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from .routers import auth
+from core.db_infrastructure.db_components.connections import init_db
 
 # Import routers
 from .routers import live_stream
@@ -27,6 +29,7 @@ TEST_ML_SERVICE = True
 async def lifespan(app: FastAPI):
     """Start services on startup, stop on shutdown."""
     # Startup
+    init_db()
     clip_ingestion_service.start()
     ml_stream_service.start(test=TEST_ML_SERVICE)
     print("[main] Services started.")
@@ -50,9 +53,9 @@ app.add_middleware(
 )
 
 app.include_router(live_stream.router, prefix="/stream", tags=["Live Stream"])
-
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 
 # ---------------- Main entry point ----------------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("application.main:app", host="0.0.0.0", port=8000, reload=False)

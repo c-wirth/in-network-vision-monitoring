@@ -1,4 +1,3 @@
-# application/services/ClipIngestionService.py
 import threading
 import time
 from application.components.Consumers import Consumers
@@ -8,20 +7,24 @@ from pathlib import Path
 from PIL import Image
 import io
 
+
 class ClipIngestionService:
     """
-    Polls the latest clip from the MLModuleInterface periodically.
+    Polls clips from ML module, saves to disk, and records metadata in DB.
     """
 
-    def __init__(self, ml_interface: MLModuleInterface, poll_interval=0.01):
+    def __init__(self, ml_interface: MLModuleInterface, db_interface, user_id: int, poll_interval=0.1):
         self.ml_interface = ml_interface
+        self.db_interface = db_interface
         self.poll_interval = poll_interval
+        self.user_id = user_id
+
         self._running = False
         self._thread = None
         self._latest_clip = None
 
-        # Register as a consumer in the module
-        self.ml_interface._clip_manager.register_consumer(Consumers.Clip_Ingestion)
+        # Register as consumer
+        self.ml_interface.register_consumer(Consumers.Clip_Ingestion)
 
     def start(self):
         if not self._running:
@@ -34,45 +37,47 @@ class ClipIngestionService:
         self._running = False
         if self._thread:
             self._thread.join()
+
         self.ml_interface._clip_manager.unregister_consumer(Consumers.Clip_Ingestion)
         print("[ClipIngestionService] Stopped.")
 
     def _run(self):
-        '''
-            clip_data: Dict[str, Any] = {
-                "clip_name": "example_clip",
-                "frames": [frame_bytes],
-                "width": frame_width,
-                "height": frame_width,
-                "fps": 30,
-                "confidence": detection_confidence
-            }
-        '''
-
-        print("In ClipIngestionService._run")
+        """
+        Poll ML module for new clips.
+        """
         while self._running:
-            clip_data = self.ml_interface._clip_manager.poll_clip_data(Consumers.Clip_Ingestion)
+            # clip_data = self.ml_interface._clip_manager.poll_clip_data(Consumers.Clip_Ingestion)
+            clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion)
+            # clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion.name)
+            # if clip_data:
+            #     print(f"[DEBUG] got clip: {clip_data['clip_name']}, frames={len(clip_data['frames'])}")
+            # else:
+            #     print("[DEBUG] no clip")
+
             if clip_data:
                 self._latest_clip = clip_data
-                self.send_clip(test=True)
+                self.process_clip()
 
             time.sleep(self.poll_interval)
 
+    def process_clip(self):
+        """
+        Save clip to disk and record metadata in DB.
+        """
+        save_root = Path("~/Desktop/stream_output").expanduser()
+        clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
+        clip_dir = save_root / clip_name
+        clip_dir.mkdir(parents=True, exist_ok=True)
 
-    def send_clip(self, test=False):
+        # Save frames
+        for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
+            frame_path = clip_dir / f"frame_{idx:04d}.jpg"
+            image = Image.open(io.BytesIO(frame_bytes))
+            image.save(frame_path)
 
-        if test:
-                save_root = Path("~/Desktop/stream_output").expanduser()
-                clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
-                clip_dir = save_root / clip_name
-                clip_dir.mkdir(exist_ok=True)
+        # ---- DB SAVE ----
+        user_id = self.user_id
+        file_path = str(clip_dir)
 
-                # Save frames
-                for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
-                    frame_path = clip_dir / f"frame_{idx:04d}.jpg"
-                    image = Image.open(io.BytesIO(frame_bytes))
-                    image.save(frame_path)
-
-
-        else:
-            print("[WARNING] CLIP INGESTION CLIP SENDING LOGIC NOT IMPLEMENTED")
+        print(f"[DB] saving clip: user_id={user_id}, path={file_path}")
+        self.db_interface.create_clip(user_id, file_path)

@@ -1,4 +1,4 @@
-# db_infrastructure/db_components/connection.py
+# db_infrastructure/db_components/connections.py
 
 """
 This file is responsible for setting up and managing the database connection.
@@ -19,6 +19,9 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .models import Base
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ============================================================
 # 1. CONFIGURATION
