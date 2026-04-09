@@ -1,6 +1,7 @@
 import threading
 import time
 from application.components.Consumers import Consumers
+from application.services.notification_service import NotificationService
 from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
 
 from pathlib import Path
@@ -13,12 +14,11 @@ class ClipIngestionService:
     Polls clips from ML module, saves to disk, and records metadata in DB.
     """
 
-    def __init__(self, ml_interface: MLModuleInterface, db_interface, user_id: int, poll_interval=0.1):
+    def __init__(self, ml_interface: MLModuleInterface, db_interface, notification_service: NotificationService, poll_interval=0.1):
         self.ml_interface = ml_interface
         self.db_interface = db_interface
+        self.notification_service = notification_service
         self.poll_interval = poll_interval
-        self.user_id = user_id
-
         self._running = False
         self._thread = None
         self._latest_clip = None
@@ -76,8 +76,24 @@ class ClipIngestionService:
             image.save(frame_path)
 
         # ---- DB SAVE ----
-        user_id = self.user_id
         file_path = str(clip_dir)
 
-        print(f"[DB] saving clip: user_id={user_id}, path={file_path}")
-        self.db_interface.create_clip(user_id, file_path)
+        print(f"[DB] saving clip: path={file_path}")
+        clip = self.db_interface.create_clip(file_path=file_path)
+
+        # ------------------------
+        # SEND NOTIFICATION
+        # ------------------------
+        user = self.db_interface.get_user_by_role("primary")
+
+        print("[DEBUG] primary user:", user)
+        print("[DEBUG] email:", user.email if user else None)
+
+        if user and user.email:
+            print("[DEBUG] calling send_clip_alert...")
+            self.notification_service.send_clip_alert(
+                user.email,
+                clip.file_path
+            )
+        else:
+            print("[DEBUG] no primary user or email — skipping email")

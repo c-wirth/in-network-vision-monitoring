@@ -31,9 +31,6 @@ class User(Base):
     # Timestamp for account creation
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship: one user -> many clips
-    clips = relationship("Clip", back_populates="user", cascade="all, delete")
-
 
 # ============================================================
 # CLIP MODEL
@@ -52,14 +49,8 @@ class Clip(Base):
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
 
-    # Foreign key linking to User
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-
     # File path on disk (video file location)
     file_path = Column(String, nullable=False)
 
     # Timestamp when clip record is created
     created_at = Column(DateTime, default=datetime.utcnow)
-
-    # Relationship: many clips -> one user
-    user = relationship("User", back_populates="clips")

@@ -5,6 +5,20 @@ from .models import User, Clip
 # USER REPOSITORY
 # ============================================================
 
+def get_all_users(db):
+    """
+    Return all users in the system.
+    """
+    return db.query(User).all()
+
+
+def get_user_by_role(db, role):
+    """
+    Return the first user matching a given role.
+    """
+    return db.query(User).filter(User.role == role).first()
+
+
 def create_user(db, email, hashed_password, role="user"):
     """
     Create a new user.
@@ -42,19 +56,12 @@ def get_user_by_id(db, user_id):
 # CLIP REPOSITORY
 # ============================================================
 
-def create_clip(db, user_id, file_path):
+def create_clip(db, file_path):
     """
-    Create a new clip.
-    Does NOT commit.
+    Create a clip record. no commit
     """
-
-    clip = Clip(
-        user_id=user_id,
-        file_path=file_path
-    )
-
+    clip = Clip(file_path=file_path)
     db.add(clip)
-    db.flush()
     return clip
 
 

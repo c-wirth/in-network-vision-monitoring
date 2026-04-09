@@ -46,6 +46,32 @@ class DBInterface:
         finally:
             db.close()
 
+    def get_all_users(self):
+        """
+        Retrieve all users.
+
+        Used for:
+        - determining if a primary user exists
+        """
+        db = self.SessionLocal()
+        try:
+            return repositories.get_all_users(db)
+        finally:
+            db.close()
+
+    def get_user_by_role(self, role):
+        """
+        Retrieve a user by role (e.g., "primary").
+
+        Used for:
+        - notification routing
+        """
+        db = self.SessionLocal()
+        try:
+            return repositories.get_user_by_role(db, role)
+        finally:
+            db.close()
+
     def get_user_by_email(self, email):
         """
         Retrieve a user by email.
@@ -75,12 +101,12 @@ class DBInterface:
     # ------------------------
     # CLIP
     # ------------------------
-    def create_clip(self, user_id, file_path):
+    def create_clip(self, file_path):
         """
         Create a new clip record.
 
         EXPECTATIONS:
-        - file_path points to a valid file on disk (not validated here)
+        - file_path points to a valid file on disk
 
         TRANSACTION:
         - Commits on success
@@ -88,7 +114,7 @@ class DBInterface:
         """
         db = self.SessionLocal()
         try:
-            clip = repositories.create_clip(db, user_id, file_path)
+            clip = repositories.create_clip(db, file_path)
             db.commit()
             db.refresh(clip)
             return clip

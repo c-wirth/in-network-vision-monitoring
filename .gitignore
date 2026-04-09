@@ -1,8 +1,11 @@
 # Python
-server/venv/
 __pycache__/
 *.pyc
-
+venv/
+**/venv/
+Desktop/stream_output/
+*.sqlite3
+*.db-journal
 # React
 frontend/node_modules/
 frontend/dist/

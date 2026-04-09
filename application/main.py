@@ -6,7 +6,7 @@ from .routers import auth
 from core.db_infrastructure.db_components.connections import init_db
 
 # Import routers
-from .routers import live_stream
+from .routers import live_stream, notifications_and_clip_view
 
 # Import service instances from dependencies
 from .dependencies import (
@@ -22,7 +22,7 @@ clip_ingestion_service = get_clip_ingestion_service()
 
 
 
-TEST_ML_SERVICE = True
+TEST_ML_SERVICE = False
 
 # ---------------- Lifespan context ----------------
 @asynccontextmanager
@@ -54,8 +54,12 @@ app.add_middleware(
 
 app.include_router(live_stream.router, prefix="/stream", tags=["Live Stream"])
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(notifications_and_clip_view.router, prefix="/clips", tags=["Clips"])
 
 # ---------------- Main entry point ----------------
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("application.main:app", host="0.0.0.0", port=8000, reload=False)
+
+# uvicorn application.main:app --reload
+# http://127.0.0.1:8000/docs

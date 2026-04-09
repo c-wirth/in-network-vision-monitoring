@@ -6,6 +6,7 @@ from application.services.MLStreamService import MLStreamService
 from application.services.ClipIngestionService import ClipIngestionService
 from core.db_infrastructure.db_interface import DBInterface
 from application.services.user_auth_service import AuthService
+from application.services.notification_service import NotificationService
 
 
 # Load configs
@@ -20,6 +21,7 @@ _ingestion_interface = IngestionModuleInterface(udp_cfg)
 _ml_module_interface = MLModuleInterface(ml_cfg)
 _db_interface = DBInterface()
 _auth_service = AuthService(_db_interface)
+_notification_service = NotificationService()
 
 # Hi Sean we need the Infrastructure Interface
 # _infrastructure_module_interface = InfrastructureModuleInterface(infrastructure_cfg)
@@ -30,7 +32,7 @@ _ml_stream_service = MLStreamService(_ingestion_interface, ml_module_interface=_
 _clip_ingestion_service = ClipIngestionService(
     _ml_module_interface,
     db_interface=_db_interface,
-    user_id=1
+    notification_service=_notification_service
 )
 
 

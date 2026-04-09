@@ -109,6 +109,6 @@ def init_db():
     # Import models so they are registered with Base.metadata
     # Without this, tables may not be created
 
-    from . import models
+    from core.db_infrastructure.db_components.models import User, Clip
 
     Base.metadata.create_all(bind=engine)
