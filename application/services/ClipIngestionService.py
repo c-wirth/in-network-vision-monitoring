@@ -3,7 +3,7 @@ import time
 from application.components.Consumers import Consumers
 from application.services.notification_service import NotificationService
 from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
-
+import shutil
 from pathlib import Path
 from PIL import Image
 import io
@@ -43,7 +43,16 @@ class ClipIngestionService:
 
     def _run(self):
         """
-        Poll ML module for new clips.
+                '''
+            clip_data: Dict[str, Any] = {
+                "clip_name": "example_clip",
+                "frames": [frame_bytes],
+                "width": frame_width,
+                "height": frame_width,
+                "fps": 30,
+                "confidence": detection_confidence
+            }
+        '''
         """
         while self._running:
             # clip_data = self.ml_interface._clip_manager.poll_clip_data(Consumers.Clip_Ingestion)
@@ -60,40 +69,32 @@ class ClipIngestionService:
 
             time.sleep(self.poll_interval)
 
-    def process_clip(self):
-        """
-        Save clip to disk and record metadata in DB.
-        """
+    def process_clip(self, test=False, test_clip_path=None):
         save_root = Path("~/Desktop/stream_output").expanduser()
-        clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
-        clip_dir = save_root / clip_name
-        clip_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save frames
-        for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
-            frame_path = clip_dir / f"frame_{idx:04d}.jpg"
-            image = Image.open(io.BytesIO(frame_bytes))
-            image.save(frame_path)
+        if test and test_clip_path:
+            # simulate clip from existing file
+            clip_name = Path(test_clip_path).stem
+            clip_dir = save_root / clip_name
+            clip_dir.mkdir(parents=True, exist_ok=True)
 
-        # ---- DB SAVE ----
+            # copy file into clip folder
+            target_path = clip_dir / Path(test_clip_path).name
+            shutil.copy(test_clip_path, target_path)
+
+        else:
+            # normal pipeline
+            clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
+            clip_dir = save_root / clip_name
+            clip_dir.mkdir(parents=True, exist_ok=True)
+
+            for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
+                frame_path = clip_dir / f"frame_{idx:04d}.jpg"
+                image = Image.open(io.BytesIO(frame_bytes))
+                image.save(frame_path)
+
+        # DB SAVE (same for both)
         file_path = str(clip_dir)
-
-        print(f"[DB] saving clip: path={file_path}")
         clip = self.db_interface.create_clip(file_path=file_path)
 
-        # ------------------------
-        # SEND NOTIFICATION
-        # ------------------------
-        user = self.db_interface.get_user_by_role("primary")
 
-        print("[DEBUG] primary user:", user)
-        print("[DEBUG] email:", user.email if user else None)
-
-        if user and user.email:
-            print("[DEBUG] calling send_clip_alert...")
-            self.notification_service.send_clip_alert(
-                user.email,
-                clip.file_path
-            )
-        else:
-            print("[DEBUG] no primary user or email — skipping email")

@@ -20,13 +20,14 @@ with open("application/configs/ml_cfg.json", 'r') as cfg:
 _ingestion_interface = IngestionModuleInterface(udp_cfg)
 _ml_module_interface = MLModuleInterface(ml_cfg)
 _db_interface = DBInterface()
-_auth_service = AuthService(_db_interface)
-_notification_service = NotificationService()
+
 
 # Hi Sean we need the Infrastructure Interface
 # _infrastructure_module_interface = InfrastructureModuleInterface(infrastructure_cfg)
 
 # Service instances
+_auth_service = AuthService(_db_interface)
+_notification_service = NotificationService()
 _live_stream_service = LiveStreamService(_ingestion_interface)
 _ml_stream_service = MLStreamService(_ingestion_interface, ml_module_interface=_ml_module_interface)
 _clip_ingestion_service = ClipIngestionService(

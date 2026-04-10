@@ -61,5 +61,6 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run("application.main:app", host="0.0.0.0", port=8000, reload=False)
 
-# uvicorn application.main:app --reload
+# from root: uvicorn application.main:app --reload
+# from frontend: npm run dev
 # http://127.0.0.1:8000/docs
