@@ -3,10 +3,6 @@ import time
 from application.components.Consumers import Consumers
 from application.services.notification_service import NotificationService
 from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
-import shutil
-from pathlib import Path
-from PIL import Image
-import io
 
 
 class ClipIngestionService:
@@ -70,31 +66,38 @@ class ClipIngestionService:
             time.sleep(self.poll_interval)
 
     def process_clip(self, test=False, test_clip_path=None):
-        save_root = Path("~/Desktop/stream_output").expanduser()
-
-        if test and test_clip_path:
-            # simulate clip from existing file
-            clip_name = Path(test_clip_path).stem
-            clip_dir = save_root / clip_name
-            clip_dir.mkdir(parents=True, exist_ok=True)
-
-            # copy file into clip folder
-            target_path = clip_dir / Path(test_clip_path).name
-            shutil.copy(test_clip_path, target_path)
-
+        if test:
+            clip = self.db_interface.create_clip_from_file(test_clip_path)
         else:
-            # normal pipeline
-            clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
-            clip_dir = save_root / clip_name
-            clip_dir.mkdir(parents=True, exist_ok=True)
+            clip = self.db_interface.create_clip_from_frames(self._latest_clip)
 
-            for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
-                frame_path = clip_dir / f"frame_{idx:04d}.jpg"
-                image = Image.open(io.BytesIO(frame_bytes))
-                image.save(frame_path)
 
-        # DB SAVE (same for both)
-        file_path = str(clip_dir)
-        clip = self.db_interface.create_clip(file_path=file_path)
+    # def process_clip(self, test=False, test_clip_path=None):
+    #     save_root = Path("~/Desktop/stream_output").expanduser()
+    #
+    #     if test and test_clip_path:
+    #         # simulate clip from existing file
+    #         clip_name = Path(test_clip_path).stem
+    #         clip_dir = save_root / clip_name
+    #         clip_dir.mkdir(parents=True, exist_ok=True)
+    #
+    #         # copy file into clip folder
+    #         target_path = clip_dir / Path(test_clip_path).name
+    #         shutil.copy(test_clip_path, target_path)
+    #
+    #     else:
+    #         # normal pipeline
+    #         clip_name = self._latest_clip.get("clip_name", "unnamed_clip")
+    #         clip_dir = save_root / clip_name
+    #         clip_dir.mkdir(parents=True, exist_ok=True)
+    #
+    #         for idx, frame_bytes in enumerate(self._latest_clip.get("frames", [])):
+    #             frame_path = clip_dir / f"frame_{idx:04d}.jpg"
+    #             image = Image.open(io.BytesIO(frame_bytes))
+    #             image.save(frame_path)
+    #
+    #     # DB SAVE (same for both)
+    #     file_path = str(clip_dir)
+    #     clip = self.db_interface.create_clip(file_path=file_path)
 
 

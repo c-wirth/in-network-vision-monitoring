@@ -1,5 +1,9 @@
 from .db_components.connections import SessionLocal
 from .db_components import repositories
+from pathlib import Path
+import cv2
+import numpy as np
+from datetime import datetime
 
 
 class DBInterface:
@@ -101,7 +105,72 @@ class DBInterface:
     # ------------------------
     # CLIP
     # ------------------------
-    def create_clip(self, file_path):
+
+    def create_clip_from_frames(self, clip_data: dict):
+        db = self.SessionLocal()
+        try:
+            # ------------------------
+            # 1. SETUP
+            # ------------------------
+            save_root = Path("~/Desktop/stream_output").expanduser()
+            save_root.mkdir(parents=True, exist_ok=True)
+
+            clip_name = clip_data.get("clip_name") or f"clip_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            video_path = save_root / f"{clip_name}.mp4"
+
+            frames = clip_data.get("frames", [])
+            if not frames:
+                raise ValueError("No frames in clip_data")
+
+            fps = clip_data.get("fps", 10)
+
+            # ------------------------
+            # 2. INIT VIDEO WRITER
+            # ------------------------
+            first_frame = cv2.imdecode(np.frombuffer(frames[0], np.uint8), cv2.IMREAD_COLOR)
+            height, width, _ = first_frame.shape
+
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            writer = cv2.VideoWriter(str(video_path), fourcc, fps, (width, height))
+
+            # ------------------------
+            # 3. WRITE FRAMES
+            # ------------------------
+            for frame_bytes in frames:
+                frame = cv2.imdecode(np.frombuffer(frame_bytes, np.uint8), cv2.IMREAD_COLOR)
+                writer.write(frame)
+
+            writer.release()
+
+            # ------------------------
+            # 4. DB RECORD
+            # ------------------------
+            clip = repositories.create_clip(db, str(video_path))
+
+            db.commit()
+            db.refresh(clip)
+            return clip
+
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def create_clip_from_file(self, file_path: str):
+        db = self.SessionLocal()
+        try:
+            clip = repositories.create_clip(db, file_path)
+            db.commit()
+            db.refresh(clip)
+            return clip
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def create_clip_record(self, file_path):
         """
         Create a new clip record.
 
