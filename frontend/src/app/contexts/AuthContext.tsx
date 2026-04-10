@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 
-export type UserRole = "admin" | "user";
+export type UserRole = "primary" | "user";
 
 export interface User {
   id: number;
@@ -26,60 +26,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_BASE = "http://127.0.0.1:8000";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  console.log("AuthProvider mounted");
 
-  // --------------------------------------------------
-  // Load user on app startup if token exists
-  // --------------------------------------------------
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      fetchCurrentUser(token);
-    }
-  }, []);
+const [user, setUser] = useState<User | null>(() => {
+  const token = localStorage.getItem("access_token");
+  return token
+    ? { id: 0, email: "persisted", role: "user" }
+    : null;
+});
 
-  const fetchCurrentUser = async (token: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
 
-      if (!res.ok) {
-        logout();
-        return;
-      }
-
-      const data = await res.json();
-      setUser(data);
-    } catch {
-      logout();
-    }
-  };
-
-  // --------------------------------------------------
+  // ------------------------
   // Login
-  // --------------------------------------------------
+  // ------------------------
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_BASE}/api/login`, {
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({ email, password }),
+        body: formData,
       });
 
       if (!res.ok) return false;
 
       const data = await res.json();
-
       const token = data.access_token;
 
       localStorage.setItem("access_token", token);
 
-      await fetchCurrentUser(token);
+      // TEMP user (since no /me endpoint)
+      setUser({
+        id: 0,
+        email,
+        role: "user",
+      });
 
       return true;
     } catch {
@@ -87,9 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // --------------------------------------------------
+  // ------------------------
   // Logout
-  // --------------------------------------------------
+  // ------------------------
   const logout = () => {
     localStorage.removeItem("access_token");
     setUser(null);
@@ -116,70 +102,3 @@ export function useAuth() {
   }
   return context;
 }
-
-
-
-
-
-
-
-
-
-// import React, { createContext, useContext, useState, ReactNode } from 'react';
-//
-// export type UserRole = 'admin' | 'viewer';
-//
-// export interface User {
-//   id: string;
-//   username: string;
-//   role: UserRole;
-// }
-//
-// interface AuthContextType {
-//   user: User | null;
-//   login: (username: string, password: string) => boolean;
-//   logout: () => void;
-//   isAuthenticated: boolean;
-// }
-//
-// const AuthContext = createContext<AuthContextType | undefined>(undefined);
-//
-// // Mock users for demo
-// const MOCK_USERS = [
-//   { id: '1', username: 'admin', password: 'admin123', role: 'admin' as UserRole },
-//   { id: '2', username: 'viewer', password: 'viewer123', role: 'viewer' as UserRole },
-// ];
-//
-// export function AuthProvider({ children }: { children: ReactNode }) {
-//   const [user, setUser] = useState<User | null>(null);
-//
-//   const login = (username: string, password: string): boolean => {
-//     const foundUser = MOCK_USERS.find(
-//       (u) => u.username === username && u.password === password
-//     );
-//
-//     if (foundUser) {
-//       setUser({ id: foundUser.id, username: foundUser.username, role: foundUser.role });
-//       return true;
-//     }
-//     return false;
-//   };
-//
-//   const logout = () => {
-//     setUser(null);
-//   };
-//
-//   return (
-//     <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// }
-//
-// export function useAuth() {
-//   const context = useContext(AuthContext);
-//   if (context === undefined) {
-//     throw new Error('useAuth must be used within an AuthProvider');
-//   }
-//   return context;
-// }

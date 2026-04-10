@@ -39,14 +39,14 @@ class MLModuleInterface:
         """
         self._clip_manager.unregister_consumer(consumer.name)
 
-
     def poll_clip(self, consumer: "Consumer"):
         """
         Poll the next available clip for a given consumer.
         Returns clip
         """
-        return self._clip_manager.poll_clip(consumer.name)
-
+        if isinstance(consumer, str):
+            return self._clip_manager.poll_clip_data(consumer)
+        return self._clip_manager.poll_clip_data(consumer.name)
 
     def process_frame(self, frame_bytes):
         """Entry point for new frames from MLStreamService"""

@@ -1,4 +1,4 @@
-# db_infrastructure/db_components/connection.py
+# db_infrastructure/db_components/connections.py
 
 """
 This file is responsible for setting up and managing the database connection.
@@ -19,6 +19,9 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .models import Base
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ============================================================
 # 1. CONFIGURATION
@@ -106,6 +109,6 @@ def init_db():
     # Import models so they are registered with Base.metadata
     # Without this, tables may not be created
 
-    from . import models
+    from core.db_infrastructure.db_components.models import User, Clip
 
     Base.metadata.create_all(bind=engine)
