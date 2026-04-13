@@ -18,13 +18,13 @@ export default function Clips() {
   const [highlightedClip, setHighlightedClip] = useState<number | null>(null);
 
   // ------------------------
-  // Fetch clips from backend
+  // Fetch clips
   // ------------------------
   useEffect(() => {
     const fetchClips = async () => {
       const token = localStorage.getItem("access_token");
 
-      const res = await fetch("http://127.0.0.1:8000/clips", {
+      const res = await fetch("http://127.0.0.1:8000/clips/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -40,7 +40,25 @@ export default function Clips() {
   }, []);
 
   // ------------------------
-  // Highlight logic (unchanged)
+  // Delete clip
+  // ------------------------
+  const handleDelete = async (clipId: number) => {
+    const token = localStorage.getItem("access_token");
+
+    const res = await fetch(`http://127.0.0.1:8000/clips/${clipId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) return;
+
+    setClips((prev) => prev.filter((c) => c.id !== clipId));
+  };
+
+  // ------------------------
+  // Highlight logic
   // ------------------------
   useEffect(() => {
     const highlight = searchParams.get('highlight');
@@ -50,6 +68,15 @@ export default function Clips() {
     }
   }, [searchParams]);
 
+  // ------------------------
+  // Helpers
+  // ------------------------
+  const getMediaUrl = (clip: Clip) =>
+    `http://127.0.0.1:8000/media/${clip.url.split("/").pop()}`;
+
+  // ------------------------
+  // Render
+  // ------------------------
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">Clip Archive</h2>
@@ -79,12 +106,18 @@ export default function Clips() {
               key={clip.id}
               className={highlightedClip === clip.id ? 'ring-2 ring-primary' : ''}
             >
-              <CardContent className="p-2">
+              <CardContent className="p-2 space-y-2">
                 <video
-                  src={`http://127.0.0.1:8000${clip.url}`}
+                  src={getMediaUrl(clip)}
                   controls
                   className="w-full"
                 />
+                <Button
+                  onClick={() => handleDelete(clip.id)}
+                  className="w-full"
+                >
+                  Delete
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -95,12 +128,15 @@ export default function Clips() {
             <Card key={clip.id}>
               <CardContent className="p-2 flex gap-4 items-center">
                 <video
-                  src={`http://127.0.0.1:8000${clip.url}`}
+                  src={getMediaUrl(clip)}
                   controls
                   className="w-48"
                 />
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                   <p>Clip ID: {clip.id}</p>
+                  <Button onClick={() => handleDelete(clip.id)}>
+                    Delete
+                  </Button>
                 </div>
               </CardContent>
             </Card>

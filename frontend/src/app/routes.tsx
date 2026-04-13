@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import Alerts from './pages/Alerts';
+// import Alerts from './pages/Alerts';
 import Clips from './pages/Clips';
-import Status from './pages/Status';
-import Settings from './pages/Settings';
+// import Status from './pages/Status';
+// import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -25,13 +25,19 @@ export const router = createBrowserRouter([
         index: true,
         Component: Dashboard,
       },
-      {
-        path: 'alerts',
-        Component: Alerts,
-      },
+
       {
         path: 'clips',
         Component: Clips,
+      },
+
+      // =========================
+      // DISABLED ROUTES
+      // =========================
+      /*
+      {
+        path: 'alerts',
+        Component: Alerts,
       },
       {
         path: 'status',
@@ -41,6 +47,7 @@ export const router = createBrowserRouter([
         path: 'settings',
         Component: Settings,
       },
+      */
     ],
   },
 ]);

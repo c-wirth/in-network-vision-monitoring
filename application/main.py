@@ -1,9 +1,13 @@
 # application/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .routers import auth
 from core.db_infrastructure.db_components.connections import init_db
+from application.dependencies import _live_stream_service as live_stream_service
+import os
+from dotenv import load_dotenv
 
 # Import routers
 from .routers import live_stream, notifications_and_clip_view
@@ -16,7 +20,6 @@ from .dependencies import (
 )
 
 # Get service instances
-live_stream_service = get_live_stream_service()
 ml_stream_service = get_ml_stream_service()
 clip_ingestion_service = get_clip_ingestion_service()
 
@@ -32,6 +35,7 @@ async def lifespan(app: FastAPI):
     init_db()
     clip_ingestion_service.start()
     ml_stream_service.start(test=TEST_ML_SERVICE)
+    live_stream_service.start()
     print("[main] Services started.")
     try:
         yield  # Control passes to FastAPI
@@ -39,11 +43,19 @@ async def lifespan(app: FastAPI):
         # Shutdown
         ml_stream_service.stop()
         clip_ingestion_service.stop()
+        live_stream_service.stop()
         print("[main] Services stopped.")
 
 
 # ---------------- FastAPI app ----------------
 app = FastAPI(title="AI-Enabled In Network Monitoring", lifespan=lifespan)
+
+load_dotenv()
+
+CLIP_PATH = os.getenv("CLIP_STORAGE_PATH")
+
+# Serve saved clip files (videos/images) from disk so the frontend can load them via URLs like /clips/<filename>
+app.mount("/media", StaticFiles(directory=CLIP_PATH), name="media")
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,4 +77,4 @@ if __name__ == "__main__":
 # http://127.0.0.1:8000/docs
 
 # from frontend: npm run dev
-# http://localhost:5173/
+# http://localhost:5173/login

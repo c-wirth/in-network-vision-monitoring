@@ -1,4 +1,4 @@
-# IngestionModuleInferface.py
+# core/IngestionModule/IngestionModuleInterface.py
 from .components import EventBus, BusEvents, UDPManager, FrameParser, StreamManager
 
 class IngestionModuleInterface:

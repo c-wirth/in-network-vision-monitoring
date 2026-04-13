@@ -1,3 +1,4 @@
+# application/dependencies.py
 import json
 from core.IngestionModule.IngestionModuleInterface import IngestionModuleInterface
 from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
