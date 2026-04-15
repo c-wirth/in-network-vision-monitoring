@@ -6,6 +6,8 @@ from core.MLProcessingModule.MLModuleInterface import MLModuleInterface
 from application.services.ClipIngestionService import ClipIngestionService
 from core.db_infrastructure.db_interface import DBInterface
 from application.services.notification_service import NotificationService
+from core.IngestionModule.components import BusEvents
+from application.dependencies import _ingestion_interface
 
 # ------------------------
 # Setup services
@@ -26,6 +28,7 @@ ingestion.start()
 # Video input (MP4)
 # ------------------------
 video_path = Path(r"C:\Users\fletc\OneDrive\Desktop\clip_of_sean\IMG_0851.mp4")
+# video_path = Path(r"C:\Users\fletc\OneDrive\Desktop\clip_of_sean\IMG_0858.mp4")
 
 cap = cv2.VideoCapture(str(video_path))
 
@@ -40,14 +43,24 @@ print("[INFO] Starting video feed simulation...")
 # ------------------------
 while cap.isOpened():
     ret, frame = cap.read()
+    # if not ret:
+    #     break
     if not ret:
-        break
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        continue
 
     success, buffer = cv2.imencode(".jpg", frame)
     if not success:
         continue
 
     ml.process_frame(buffer.tobytes())
+    _ingestion_interface.bus.publish(
+        BusEvents.FRAME_READY,
+        {
+            "frame_id": 0,  # temporary
+            "frame": buffer.tobytes()
+        }
+    )
 
     time.sleep(0.1)
 

@@ -64,20 +64,8 @@ def create_clip(db, file_path):
     db.add(clip)
     return clip
 
-
-def get_clips_by_user(db, user_id, limit=50):
-    """
-    Get clips for a specific user.
-    """
-
-    return (
-        db.query(Clip)
-        .filter(Clip.user_id == user_id)
-        .order_by(Clip.created_at.desc())
-        .limit(limit)
-        .all()
-    )
-
+def get_all_clips(db):
+    return db.query(Clip).all()
 
 def get_clip_by_id(db, clip_id):
     """
