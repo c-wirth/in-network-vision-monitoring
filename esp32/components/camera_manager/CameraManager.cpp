@@ -229,7 +229,7 @@ void CameraManager::streamTask(void* param) {
                 ESP_LOGW(TAG, "Frame queue full — dropping frame");
                 CameraManager::returnFrame(fb);
             } else{
-    		ESP_LOGI(TAG, "Frame pushed to queue successfully");
+    		//ESP_LOGI(TAG, "Frame pushed to queue successfully");
 			}
         } else {
             ESP_LOGE(TAG, "Failed to capture frame during streaming");

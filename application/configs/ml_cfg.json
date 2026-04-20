@@ -1,7 +1,7 @@
 {
 	"buffer_timeout_sec": 2.0,
-	"max_clip_length": 150,
-	"confidence": 0.5,
+	"max_clip_length": 300,
+	"confidence": 0.3,
 	"classes": [1]
 }
 

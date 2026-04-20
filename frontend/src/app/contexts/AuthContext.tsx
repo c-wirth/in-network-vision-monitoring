@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 const [user, setUser] = useState<User | null>(() => {
   const token = localStorage.getItem("access_token");
   return token
-    ? { id: 0, email: "persisted", role: "user" }
+    ? { id: 0, email: "colby.wirth@maine.edu", role: "user" }
     : null;
 });
 

@@ -22,7 +22,7 @@ DeviceStateManager::DeviceStateManager():
 	udpState_(UDPState::OFF)
 {
 
-	frame_queue_ = xQueueCreate(3, sizeof(camera_fb_t*));
+	frame_queue_ = xQueueCreate(10, sizeof(camera_fb_t*));
 
         if (frame_queue_ == nullptr) {
             ESP_LOGE(TAG, "Failed to create frame queue — halting. Heap may be OOM");

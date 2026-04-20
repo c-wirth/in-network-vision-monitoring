@@ -10,7 +10,7 @@ class LiveStreamService:
     Polls frames from IngestionModuleInterface and keeps the latest frame in memory.
     """
 
-    def __init__(self, ingestion_interface, poll_interval=0.01, test_mode=False):
+    def __init__(self, ingestion_interface, poll_interval=0.033, test_mode=False):
 
         # change this to True when using a looping .mp4 file for the feed
         # change this to false to use the actual camera
@@ -116,8 +116,7 @@ class LiveStreamService:
             #print("[LiveStream] polling...")
             frame_idx, frame_bytes = self.ingestion_interface.poll_frame(Consumers.Live_Stream)
             if frame_bytes:
-                print("[LiveStream] got frame")
-                # Save latest frame in memory
+                #print("[LiveStream DEBUG] got frame")
                 with self._lock:
                     self._latest_frame = frame_bytes
                     self._latest_index = frame_idx

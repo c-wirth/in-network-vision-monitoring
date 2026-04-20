@@ -58,9 +58,10 @@ class ClipIngestionService:
 
             clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion)
             if clip_data:
-                print(f"[DEBUG] got clip: {clip_data['clip_name']}, frames={len(clip_data['frames'])}")
+                print(f"[ClipIngestionService DEBUG] got clip: {clip_data['clip_name']}, frames={len(clip_data['frames'])}")
             else:
-                print("[DEBUG] no clip")
+                #print("[ClipIngestionService DEBUG] no clip")
+                pass
 
             if clip_data:
                 self._latest_clip = clip_data

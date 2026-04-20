@@ -21,6 +21,11 @@ class NotificationService:
         msg["To"] = email
 
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            try:
+                smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            except Exception as e:
+                print(f"[EMAIL ERROR] login failed: {e}")
+                return
+
             smtp.send_message(msg)
             print("[DEBUG] email sent successfully")

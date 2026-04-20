@@ -267,50 +267,71 @@ void UDPManager::udpSendTask(void* param) {
     uint16_t frame_id = 0;
 
     while (streaming_) {
-        camera_fb_t* fb = nullptr;
 
-        if (xQueueReceive(frame_queue_, &fb, UDP_QUEUE_RECEIVE_TIMEOUT_MS) == pdPASS) {
+        // --- Drain queue, keep only the latest frame ---
+        camera_fb_t* fb  = nullptr;
+        camera_fb_t* tmp = nullptr;
+
+        while (xQueueReceive(frame_queue_, &tmp, 0) == pdPASS) {
+            if (tmp == nullptr) continue;
             if (fb != nullptr) {
-                uint16_t total_frags = (fb->len + UDP_PAYLOAD_SIZE - 1) / UDP_PAYLOAD_SIZE;
-
-                for (uint16_t i = 0; i < total_frags; i++) {
-                    uint8_t packet[UDP_MTU];
-                    size_t  offset = i * UDP_PAYLOAD_SIZE;
-                    size_t  chunk  = (fb->len - offset < UDP_PAYLOAD_SIZE)
-                                        ? fb->len - offset
-                                        : UDP_PAYLOAD_SIZE;
-
-                    packet[0] = (frame_id >> 8) & 0xFF;
-                    packet[1] =  frame_id & 0xFF;
-                    packet[2] = (i >> 8) & 0xFF;
-                    packet[3] =  i & 0xFF;
-                    packet[4] = (total_frags >> 8) & 0xFF;
-                    packet[5] =  total_frags & 0xFF;
-                    packet[6] = 0;
-                    packet[7] = 0;
-
-                    memcpy(packet + UDP_HEADER_SIZE, fb->buf + offset, chunk);
-
-                    sendto(send_sock_, packet, UDP_HEADER_SIZE + chunk, 0,
-                           (struct sockaddr*)&server_addr_, sizeof(server_addr_));
-                }
-
-                frame_id++;
                 esp_camera_fb_return(fb);
-
-            } else {
-                ESP_LOGW(TAG, "Received null frame pointer from queue");
+                ESP_LOGD(TAG, "Dropped stale frame, queue draining");
             }
-        } else {
-            ESP_LOGW(TAG, "Frame queue timeout — no frame available");
+            fb = tmp;
         }
-    } // end while
+
+        // Queue was empty — block until next frame arrives
+        if (fb == nullptr) {
+            if (xQueueReceive(frame_queue_, &fb, UDP_QUEUE_RECEIVE_TIMEOUT_MS) != pdPASS || fb == nullptr) {
+                ESP_LOGW(TAG, "Frame queue timeout — no frame available");
+                continue;
+            }
+        }
+
+        // --- Diagnostic: warn if queue is still backing up ---
+        UBaseType_t waiting = uxQueueMessagesWaiting(frame_queue_);
+        if (waiting > 2) {
+            ESP_LOGW(TAG, "Frame queue still backing up: %d frames waiting", waiting);
+        }
+
+        // --- Fragment and send ---
+        uint16_t total_frags = (fb->len + UDP_PAYLOAD_SIZE - 1) / UDP_PAYLOAD_SIZE;
+
+        for (uint16_t i = 0; i < total_frags; i++) {
+            uint8_t packet[UDP_MTU];
+            size_t  offset = i * UDP_PAYLOAD_SIZE;
+            size_t  chunk  = (fb->len - offset < UDP_PAYLOAD_SIZE)
+                                ? fb->len - offset
+                                : UDP_PAYLOAD_SIZE;
+
+            packet[0] = (frame_id >> 8) & 0xFF;
+            packet[1] =  frame_id       & 0xFF;
+            packet[2] = (i >> 8)        & 0xFF;
+            packet[3] =  i              & 0xFF;
+            packet[4] = (total_frags >> 8) & 0xFF;
+            packet[5] =  total_frags       & 0xFF;
+            packet[6] = 0;
+            packet[7] = 0;
+
+            memcpy(packet + UDP_HEADER_SIZE, fb->buf + offset, chunk);
+
+            sendto(send_sock_, packet, UDP_HEADER_SIZE + chunk, 0,
+                   (struct sockaddr*)&server_addr_, sizeof(server_addr_));
+
+            if (i < total_frags - 1) {
+                vTaskDelay(pdMS_TO_TICKS(2));
+            }
+        }
+
+        frame_id++;
+        esp_camera_fb_return(fb);
+    }
 
     ESP_LOGI(TAG, "UDP send task exiting");
     send_task_handle_ = nullptr;
     vTaskDelete(nullptr);
 }
-
 
 
 // --- receive task ---

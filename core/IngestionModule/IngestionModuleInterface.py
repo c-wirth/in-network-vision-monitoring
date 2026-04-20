@@ -7,7 +7,7 @@ class IngestionModuleInterface:
         self.bus = EventBus()
         self.udp_manager = UDPManager(udp_cfg, self.bus)
         self.frame_parser = FrameParser(self.bus)
-        self._stream_manager = StreamManager(self.bus)
+        self._stream_manager = StreamManager(self.bus, max_frames=300)
 
     def get_udp_running_status(self):
         print(f"[DEBUG] UDP_MANAGER running status: {self.udp_manager.is_running}")

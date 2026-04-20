@@ -43,8 +43,14 @@ class UDPManager:
 
     def _establish_connection(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1024 * 1024)
         self.sock.bind(("0.0.0.0", self.cfg["device_frame_port"]))
         self.sock.settimeout(self.cfg["handshake_timeout_sec"])
+
+
+        actual = self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
+        print(f"[UDPManager] SO_RCVBUF set to {actual / 1024:.0f} KB")
 
         # flush the buffer
         self.sock.setblocking(False)

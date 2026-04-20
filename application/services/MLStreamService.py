@@ -55,6 +55,7 @@ class MLStreamService:
         while self._running:
             frame_idx, frame_bytes = self.ingestion_interface.poll_frame(Consumers.ML_Stream)
             if frame_bytes:
+                #print("[MLStreamService DEBUG] Frame received!!")
                 try:
                     # Send frame/clip to ML module
                     self.ml_module_interface.process_frame(frame_bytes)
@@ -63,6 +64,7 @@ class MLStreamService:
             time.sleep(self.poll_interval)
 
         else:
+            print("[MLStreamService DEBUG] No frame received")
             # no frame available, back off a bit to avoid busy-wait
             time.sleep(self.poll_interval)
 
