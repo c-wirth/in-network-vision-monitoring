@@ -51,14 +51,16 @@ class ClipIngestionService:
             }
         '''
         """
+        print("[DEBUG] starting CLipIngestionService._run()")
         while self._running:
             # clip_data = self.ml_interface._clip_manager.poll_clip_data(Consumers.Clip_Ingestion)
-            clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion)
             # clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion.name)
-            # if clip_data:
-            #     print(f"[DEBUG] got clip: {clip_data['clip_name']}, frames={len(clip_data['frames'])}")
-            # else:
-            #     print("[DEBUG] no clip")
+
+            clip_data = self.ml_interface.poll_clip(Consumers.Clip_Ingestion)
+            if clip_data:
+                print(f"[DEBUG] got clip: {clip_data['clip_name']}, frames={len(clip_data['frames'])}")
+            else:
+                print("[DEBUG] no clip")
 
             if clip_data:
                 self._latest_clip = clip_data

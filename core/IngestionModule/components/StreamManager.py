@@ -12,6 +12,19 @@ class StreamManager:
         self.bus = bus
         self.bus.subscribe(BusEvents.FRAME_READY, self._handle_new_frame)
 
+    def empty_stream_buffer(self):
+        """Clear all frames from the buffer and reset all consumer cursors."""
+        with self._lock:
+            # Reset the buffer to all None
+            self._buffer = [None] * self.max_frames
+
+            # Reset the write index
+            self._next_idx = 0
+
+            # Reset all consumer cursors (they have seen no frames)
+            for consumer_name in self._consumer_cursors:
+                self._consumer_cursors[consumer_name] = None
+
     def register_consumer(self, name):
         with self._lock:
             self._consumer_cursors[name] = None  # no frames seen yet

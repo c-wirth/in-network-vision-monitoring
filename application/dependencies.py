@@ -23,9 +23,6 @@ _ml_module_interface = MLModuleInterface(ml_cfg)
 _db_interface = DBInterface()
 
 
-# Hi Sean we need the Infrastructure Interface
-# _infrastructure_module_interface = InfrastructureModuleInterface(infrastructure_cfg)
-
 # Service instances
 _auth_service = AuthService(_db_interface)
 _notification_service = NotificationService()
@@ -37,10 +34,6 @@ _clip_ingestion_service = ClipIngestionService(
     notification_service=_notification_service
 )
 
-
-# Hi Sean we also need the Auth and Notification services
-# _auth_service = UserAuthService(_infrastructure_module_interface)
-# _notification_service = NotificationService(_infrastructure_module_interface)
 
 # Accessors
 def get_live_stream_service(): return _live_stream_service

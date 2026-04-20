@@ -1,10 +1,10 @@
 {
-  "handshake_timeout_sec": 3.0,
+  "handshake_timeout_sec": 5.0,
   "device_ip": "192.168.40.12",
   "device_control_port": 5006,
   "device_frame_port": 5005,
   "alive_interval_sec": 1.0,
-  "simulate_stream": true,
+  "simulate_stream": false,
   "simulation_dir": "/Users/colby/Desktop/sim_clip/",
   "simulation_interval": 0.01
 }

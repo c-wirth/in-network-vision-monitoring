@@ -37,12 +37,15 @@ async def lifespan(app: FastAPI):
     ml_stream_service.start(test=TEST_ML_SERVICE)
     live_stream_service.start()
     print("[main] Services started.")
+
+    live_stream_service.send_start_stream_signal()
     try:
         yield  # Control passes to FastAPI
     finally:
         # Shutdown
         ml_stream_service.stop()
         clip_ingestion_service.stop()
+        live_stream_service.send_stop_stream_signal()
         live_stream_service.stop()
         print("[main] Services stopped.")
 

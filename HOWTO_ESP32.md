@@ -4,6 +4,13 @@ This guide outlines the steps to build, flash, and monitor an ESP32-S3 project u
 
 ---
 
+## 0. Source esp 32 env
+
+After Installing EPS32 components:
+
+source esp-idf/export.sh
+
+
 ## 1. Set Target
 
 Before building, make sure the project target is set to **ESP32-S3**:

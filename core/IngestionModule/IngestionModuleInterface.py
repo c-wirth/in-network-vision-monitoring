@@ -9,6 +9,13 @@ class IngestionModuleInterface:
         self.frame_parser = FrameParser(self.bus)
         self._stream_manager = StreamManager(self.bus)
 
+    def get_udp_running_status(self):
+        print(f"[DEBUG] UDP_MANAGER running status: {self.udp_manager.is_running}")
+        return self.udp_manager.is_running
+
+    def get_udp_streaming_status(self):
+        print(f"[DEBUG] UDP_MANAGER streaming status: {self.udp_manager.is_streaming}")
+        return self.udp_manager.is_streaming
 
     def register_consumer(self, consumer: "Consumer"):
         """
@@ -36,6 +43,7 @@ class IngestionModuleInterface:
         """
         Sends the signal to the UDP layer to start video stream
         """
+        print("[IngestionModuleInterface DEBUG] sending start_stream_signal")
         self.bus.publish(BusEvents.CONTROL_SIGNAL, {
             "action": "start_stream"
         })
@@ -48,3 +56,4 @@ class IngestionModuleInterface:
         self.bus.publish(BusEvents.CONTROL_SIGNAL, {
             "action": "stop_stream"
         })
+        self._stream_manager.empty_stream_buffer()

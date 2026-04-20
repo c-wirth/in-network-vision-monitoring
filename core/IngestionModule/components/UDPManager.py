@@ -5,6 +5,7 @@ import threading
 import os
 from PIL import Image
 import io
+import struct
 
 from .IngestionEventBus import BusEvents
 
@@ -24,6 +25,7 @@ class UDPManager:
         self.bus = bus
         self.cfg = cfg
         self.is_running = False
+        self.is_streaming = False
 
         self.simulate_stream = cfg.get("simulate_stream", False)
         self.simulation_dir = cfg.get("simulation_dir", None)
@@ -33,6 +35,9 @@ class UDPManager:
 
         if not self.simulate_stream:
             self._establish_connection()
+
+        else:
+            print("[WARNING] stream started UDPManager started with simulate_stream=True")
 
         self.bus.subscribe(BusEvents.CONTROL_SIGNAL, self._handle_incoming_command)
 
@@ -99,11 +104,11 @@ class UDPManager:
         Publishes frame fragments or messages to the bus.
         """
         if not self.is_running:
-            print("UDPManager is not running. Cannot start receive loop.")
+            print("[UDP WARNING] UDPManager is not running. Cannot start receive loop.")
             return
 
         self.sock.settimeout(0.01)
-        print("UDPManager receive loop started.")
+        print("[UDP DEBUG] UDPManager receive loop started.")
 
         try:
             while self.is_running:
@@ -146,17 +151,18 @@ class UDPManager:
         action = cmd.get("action")
 
         if action == "start_stream":
-            if self.is_running:
-                print("Stream already running")
+            if self.is_streaming:
+                print("[UDPManager WARNING] Stream already streaming, returning...")
                 return
 
-            self.is_running = True
+            self.is_streaming = True
 
             if self.simulate_stream:
-                print("Starting simulated stream...")
+                print("[UDPManager DEBUG] Starting simulated stream...")
                 self._stream_thread = threading.Thread(target=self._simulate_stream, daemon=True)
             else:
-                print("Starting real UDP stream...")
+                print("[UDPManager DEBUG] Starting real UDP stream...")
+                self.send_control(FLAG_START_STREAM)
                 self._stream_thread = threading.Thread(target=self._start_receiving, daemon=True)
 
             self._stream_thread.start()
@@ -164,10 +170,10 @@ class UDPManager:
 
         elif action == "stop_stream":
             if not self.is_running:
-                print("Stream not running")
+                print("[UDPManager DEBUG] Stream not running")
                 return
 
-            print("Stopping stream...")
+            print("[UDPManager DEBUG] Stopping stream...")
             self.is_running = False
             if not self.simulate_stream:
                 self.send_control(FLAG_STOP_STREAM)
@@ -175,10 +181,10 @@ class UDPManager:
             if self._stream_thread and self._stream_thread.is_alive():
                 self._stream_thread.join(timeout=1.0)
             self.bus.publish(BusEvents.STOP_STREAM)
-            print("Stream stopped")
+            print("[UDPManager DEBUG] Stream stopped")
 
         else:
-            print(f"UNKNOWN action received by UDPManager: {action}")
+            print(f"[UDPManager DEBUG] UNKNOWN action received by UDPManager: {action}")
 
 
     def compress_frame(self, frame_bytes: bytes) -> bytes:
